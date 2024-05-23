@@ -4,10 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 
 export const useDraggable = () => {
     const [node, setNode] = useState();
-    const [{ dx, dy, angle }, setOffset] = useState({
-        dx: 0,
-        dy: 0,
-        angle: 0,
+    const [{ dx, dy }, setOffset] = useState({
+        dx: 50,
+        dy: 90,
     });
 
     const ref = useCallback((nodeEle) => {
@@ -18,39 +17,34 @@ export const useDraggable = () => {
         if (!node) {
             return;
         }
-        const width = node.getBoundingClientRect().width;
-        const containerWidth = node.parentElement.getBoundingClientRect().width;
+        // const width = node.parentElement.viewBox.baseVal.width;
+        const containerWidth = node.parentElement.viewBox.baseVal.width - 20;
         const radius = containerWidth / 2;
-        const center = radius - width / 2;
+        const center = radius;
         
         const startPos = {
             x: e.clientX - dx,
             y: e.clientY - dy,
         };
 
-
         const handleMouseMove = (e) => {
             let dx = e.clientX - startPos.x;
             let dy = e.clientY - startPos.y;
-            let angle
 
             const centerDistance = Math.sqrt(
-                Math.pow(dx - center, 2) + Math.pow(dy - center, 2)
+                Math.pow((dx - center), 2) + Math.pow((dy - center), 2)
             );
             const sinValue = (dy - center) / centerDistance;
             const cosValue = (dx - center) / centerDistance;
-            dx = center + radius * cosValue;
-            dy = center + radius * sinValue;
-            angle = (Math.acos(cosValue)*180)/Math.PI
+            dx = 10 + center + radius * cosValue;
+            dy = 10 + center + radius * sinValue;
 
-            setOffset({ dx, dy, angle });
-            updateCursor();
+            setOffset({ dx, dy });
         };
 
         const handleMouseUp = () => {
             document.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseup', handleMouseUp);
-            resetCursor();
         };
 
         document.addEventListener('mousemove', handleMouseMove);
@@ -67,16 +61,16 @@ export const useDraggable = () => {
             x: touch.clientX - dx,
             y: touch.clientY - dy,
         };
-        const width = node.getBoundingClientRect().width;
-        const containerWidth = node.parentElement.getBoundingClientRect().width;
+        // const width = node.parentElement.viewBox.baseVal.width;
+        const containerWidth = node.parentElement.viewBox.baseVal.width;
         const radius = containerWidth / 2;
-        const center = radius - width / 2;
+        const center = radius;
 
         const handleTouchMove = (e) => {
             const touch = e.touches[0];
             let dx = touch.clientX - startPos.x;
             let dy = touch.clientY - startPos.y;
-            let angle
+            
             const centerDistance = Math.sqrt(
                 Math.pow(dx - center, 2) + Math.pow(dy - center, 2)
             );
@@ -84,31 +78,18 @@ export const useDraggable = () => {
             const cosValue = (dx - center) / centerDistance;
             dx = center + radius * cosValue;
             dy = center + radius * sinValue;
-            angle = (Math.acos(cosValue)*180)/Math.PI;
 
-            setOffset({ dx, dy, angle });
-            updateCursor();
+            setOffset({ dx, dy });
         };
 
         const handleTouchEnd = () => {
             document.removeEventListener('touchmove', handleTouchMove);
             document.removeEventListener('touchend', handleTouchEnd);
-            resetCursor();
         };
 
         document.addEventListener('touchmove', handleTouchMove);
         document.addEventListener('touchend', handleTouchEnd);
     }, [node, dx, dy]);
-
-    const updateCursor = () => {
-        document.body.style.cursor = 'move';
-        document.body.style.userSelect = 'none';
-    };
-
-    const resetCursor = () => {
-        document.body.style.removeProperty('cursor');
-        document.body.style.removeProperty('user-select');
-    };
 
     useEffect(() => {
         if (!node) {
@@ -122,5 +103,5 @@ export const useDraggable = () => {
         };
     }, [node, dx, dy]);
 
-    return [ref, dx, dy, angle];
+    return [ref, dx, dy];
 };

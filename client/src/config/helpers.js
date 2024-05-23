@@ -59,8 +59,6 @@ export const getHeight = (parts, assemblyMap) => {
   
   const result = assembledHeightArray.reduce((accum, cur) => accum = accum + cur.height, 0)
 
-  console.log('height=', result)
-  
   return result
 }
 

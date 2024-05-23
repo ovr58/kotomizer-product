@@ -1,3 +1,5 @@
 import { useDraggable } from "./useDraggable"
+import { useForwardRaycast } from "./useRaycaster"
+import { useBoundingBox } from "./useBoundingbox"
 
-export { useDraggable }
+export { useDraggable, useForwardRaycast, useBoundingBox }

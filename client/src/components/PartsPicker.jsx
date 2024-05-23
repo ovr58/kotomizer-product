@@ -4,7 +4,6 @@ import { Parts } from '../config/constants'
 
 import CustomButton from './CustomButton'
 import PartPreview from '../canvas/PartPreview'
-import KnobControl from './KnobControl'
 
 function PartsPicker({ 
   partPickerButtonsStatus, 
@@ -12,16 +11,14 @@ function PartsPicker({
   unDoAdd, 
   deleteLast, 
   freeCons, 
-  setPosition, 
-  placeDetail 
 }) {
   
   const [ clicked, setClicked ] = useState('')
 
-  const [ angle, setAngle ] = useState(0)
-
   if (freeCons[0]) {
     Parts.forEach((part) => part.type != 'base' ? part.available = true : part.available = false)
+  } else if (partPickerButtonsStatus.deleteLastButton) {
+    Parts.forEach((part) => part.available = false)
   } else {
     Parts.forEach((part) => part.type == 'base' ? part.available = true : part.available = false)
   }
@@ -37,25 +34,6 @@ function PartsPicker({
             ${Parts.filter((part => Object.values(part).indexOf(clicked)>-1))[0].price}`
           }
         </p>
-        {partPickerButtonsStatus.undoButton ? 
-        <div className='flex flex-1 h-1/2'>
-          <KnobControl 
-            display={angle}
-            setup={setAngle}
-          />
-          <CustomButton
-            type='filled'
-            title='Change positions'
-            handleClick={() => {setPosition(freeCons)}}
-            customStyles='ml-5'
-          /> 
-          <CustomButton
-            type='filled'
-            title='Place'
-            handleClick={() => {placeDetail()}}
-            customStyles='ml-5'
-          />
-        </div> : ''}
       </div>
       <div className='grid grid-cols-3 gap-4'>
         {Parts.map((partModel, _i) => (

@@ -1,10 +1,11 @@
 import React, { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { useSnapshot } from 'valtio'
 
+import { snapshot, useSnapshot } from 'valtio'
 import state from '../store'
 
 import config from '../config/config'
+import { Parts } from '../config/constants'
 
 import { download } from '../assets'
 
@@ -27,23 +28,34 @@ const Customizer = () => {
 
   const [conNumber, setConNumber] = useState(0)
 
-  console.log(conNumber)
-
   const hasParts = Boolean(assemblyMap.length > 0)
-  const hasNimbedPart = hasParts ? assemblyMap[assemblyMap.length-1].id < 0 : false
   const hasFreeCons = snap.parts.length>0 ? Boolean(freeCons[0]) : false
 
+  const hasNimbedPart = () => {
+    return hasParts ? assemblyMap[assemblyMap.length-1].id < 0 : false
+  }
+
+  const isRotatable = (partName) => {
+
+    const nimbedPartName = hasNimbedPart() ? assemblyMap[assemblyMap.length-1].name : partName
+
+    const isRotatable = Parts.filter((part) => part.name==nimbedPartName)[0].rotatable
+
+    return isRotatable
+  }
+
   const [partPickerButtonsStatus, setPartPickerButtonsStatus] = useState({
-    undoButton: hasNimbedPart,
-    addButton: !hasNimbedPart && hasFreeCons,
-    deleteLastButton: !hasNimbedPart && hasParts
+    undoButton: hasParts && hasNimbedPart(),
+    addButton: !hasNimbedPart() && hasFreeCons,
+    deleteLastButton: !hasNimbedPart() && hasParts
   })
 
   const [activeEditorTab, setActiveEditorTab] = useState("")
 
-  const [activeFilterTab, setActiveFilterTab] = useState({
-    logoShirt: true,
-    stylishShirt: false,
+  const [activeTransformTab, setActiveTransformTab] = useState({
+    changePosition: false,
+    place: false,
+    rotate:false
   })
 
   const generateTabContent = () => {
@@ -63,8 +75,6 @@ const Customizer = () => {
                     unDoAdd={unDoAdd}
                     deleteLast={deleteLast}
                     freeCons={freeCons.filter(freeCon => freeCon.id >= 0)}
-                    setPosition={setNewPosition}
-                    placeDetail={placeDetail}
                />
       default:
         return null
@@ -75,22 +85,18 @@ const Customizer = () => {
     const decalType = DecalTypes[type]
 
     state[decalType.stateProperty] = result
-
-    // if (!activeFilterTab[decalType.filterTab]) {
-    //   handleActiveFilterTab(decalType.filterTab)
-    // }
   }
 
-  const handleActiveTransformTab = (tabName) => {
+  const handleActiveTransformTab = (tabName, value=0, intersectedState) => {
     switch (tabName) {
       case "changePosition":
         setNewPosition(freeCons.filter(freeCon => freeCon.id >= 0))
         break
       case "place":
-        placeDetail()
+        placeDetail(intersectedState)
         break
       case "rotate":
-        // rotateDetail()
+        rotateDetail(value)
         break
       default:
         return
@@ -114,7 +120,6 @@ const Customizer = () => {
     
     const partIndex = assemblyMap.length
     const firstFreeCon = positions(assemblyMap, snap.parts).freeCons[0]
-    const hasNimbedPart = partIndex !=0 ? assemblyMap[assemblyMap.length-1].id < 0 : false
     
     setPartPickerButtonsStatus({
       undoButton: true,
@@ -122,8 +127,14 @@ const Customizer = () => {
       deleteLastButton: false
     })
 
+    setActiveTransformTab({
+      changePosition: true,
+      place: true,
+      rotate: isRotatable(part)
+    })
+    
     if (partIndex != 0) {
-      !hasNimbedPart && state.assemblyMap.push({
+      !(partIndex !=0 && hasNimbedPart()) && state.assemblyMap.push({
         id: -partIndex,
         name: part,
         connectedTo: [{ id: firstFreeCon.id,
@@ -141,6 +152,11 @@ const Customizer = () => {
         addButton: true,
         deleteLastButton: true
       })
+      setActiveTransformTab({
+        changePosition: false,
+        place: false,
+        rotate:false
+      })
     }
   }
 
@@ -151,15 +167,19 @@ const Customizer = () => {
       return
     }
 
-    const hasNimbedPart = assemblyMap[assemblyMap.length-1].id < 0
-
     setPartPickerButtonsStatus({
       undoButton: false,
       addButton: true,
       deleteLastButton: true
     })
 
-    if (assemblyMap.length > 0 && hasNimbedPart) {
+    setActiveTransformTab({
+      changePosition: false,
+      place: false,
+      rotate:false
+    })
+
+    if (assemblyMap.length > 0 && hasNimbedPart()) {
       state.assemblyMap.pop()
     }
   }
@@ -183,11 +203,7 @@ const Customizer = () => {
   }
 
   const setNewPosition = (freeCons) => {
-    
-    const hasNimbedPart = assemblyMap[assemblyMap.length-1].id < 0
-    
-    if (hasNimbedPart && freeCons[0]) {
-      // get there connectedTo new
+    if (hasNimbedPart() && freeCons[0]) {
       state.assemblyMap[assemblyMap.length-1].connectedTo = [{
         id: freeCons[conNumber].id,
         connector: {name: freeCons[conNumber].conName}
@@ -199,26 +215,43 @@ const Customizer = () => {
 
   }
 
-  const placeDetail = () => {
-
-    const hasNimbedPart = assemblyMap[assemblyMap.length-1].id < 0
-
-    if (hasNimbedPart) {
-      state.assemblyMap[assemblyMap.length-1].id = -state.assemblyMap[assemblyMap.length-1].id
+  const placeDetail = (intersectedState) => {
+    
+    if (hasNimbedPart()) {
+      if (intersectedState.length<2) {
+        state.assemblyMap[assemblyMap.length-1].id = -state.assemblyMap[assemblyMap.length-1].id
+      } else {
+        alert(alerts.intersectionDetected.ru)
+        return
+      }
+      
       
       setPartPickerButtonsStatus({
         undoButton: false,
         addButton: true,
         deleteLastButton: true
       })
-    }
 
+      setActiveTransformTab({
+        changePosition: false,
+        place: false,
+        rotate:false
+      })
+    }
   }
 
-  const rotateDetail = () => {
+  const rotateDetail = (value) => {
 
+    if (hasNimbedPart()) {
+
+      if (isRotatable()) {
+        state.assemblyMap[assemblyMap.length-1].rotation = [0, value*(Math.PI/180), 0]
+      } else {
+        alert(alerts.arentRotatable.ru)
+      }
+      
+    }
     return
-
   }
 
   return (
@@ -236,6 +269,7 @@ const Customizer = () => {
                   <Tab 
                     key={tab.name}
                     tab={tab}
+                    isActive={activeEditorTab === tab.name}
                     handleClick = {()=>setActiveEditorTab(tab.name === activeEditorTab ? "" : tab.name)}
                   />
                 ))}
@@ -265,8 +299,9 @@ const Customizer = () => {
                   <Tab 
                     key={tab.name}
                     tab={tab}
+                    isActive = {activeTransformTab[tab.name]}
                     isTransformTab
-                    handleClick = {()=> handleActiveTransformTab(tab.name)}
+                    handleClick = {(value, intersectedState)=> handleActiveTransformTab(tab.name, value, intersectedState)}
                   />
                 ))}
           </motion.div>

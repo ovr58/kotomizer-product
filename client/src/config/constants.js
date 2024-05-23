@@ -50,6 +50,7 @@ export const Parts = [
     name: 'part1',
     type: 'base',
     connectors: ['con1out', 'con2out'],
+    rotatable: false,
     filename: '/part1.glb',
     price: 10,
     description: 'part1 description'
@@ -58,6 +59,7 @@ export const Parts = [
     name: 'part2',
     type: 'perfo',
     connectors: ['con1out'],
+    rotatable: false,
     filename: '/part2.glb',
     price: 5,
     description: 'part2 description'
@@ -66,6 +68,7 @@ export const Parts = [
     name: 'part3',
     type: 'head',
     connectors: [],
+    rotatable: true,
     filename: '/part3.glb',
     price: 20,
     description: 'part3 description'
@@ -74,9 +77,19 @@ export const Parts = [
     name: 'part4',
     type: 'head',
     connectors: [],
+    rotatable: true,
     filename: '/part4.glb',
     price: 15,
     description: 'part4 description'
+  },
+  {
+    name: 'part5',
+    type: 'head',
+    connectors: [],
+    rotatable: true,
+    filename: '/part5.glb',
+    price: 20,
+    description: 'part5 description'
   }
 ]
 
@@ -93,5 +106,11 @@ export const alerts = {
   },
   onlyOnePositionsAvalable: {
     ru: 'Только одна позиция доступна!'
+  },
+  arentRotatable: {
+    ru: 'Не поворачиваемая деталь!'
+  },
+  intersectionDetected: {
+    ru: 'НЕЛЬЗЯ ПОСТАВИТЬ!'
   }
 }

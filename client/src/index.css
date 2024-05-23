@@ -27,19 +27,6 @@ html {
   @apply flex-1 xl:justify-center justify-start flex flex-col gap-10;
 }
 
-.circle {
-  @apply relative border-4 border-solid w-auto h-auto shadow-[0_0_10px_#000] rounded-[50%] left-2/4 top-2/4 before:content-[""] before:absolute before:w-[90%] before:h-[90%] before:shadow-[inset_0_0_10px_#000] before:rounded-[50%] before:left-[5%] before:top-[5%];
-  transform: translate3d(-50%, -50%, 0);
-}
-
-.dot {
-  @apply w-[5%] h-3/6 rotate-0 origin-[center_bottom] top-0 before:content-[""] before:absolute before:bg-white before:shadow-[0_0_10px_#000] before:w-[200%] before:h-0 before:cursor-pointer before:pb-[200%] before:rounded-[50%];
-}
-
-.dot:before {
-  transform: translate3d(-40%, -40%, 0);
-}
-
 .head-text {
   @apply xl:text-[10rem] text-[6rem] xl:leading-[11rem] leading-[7rem] font-black text-black;
 }

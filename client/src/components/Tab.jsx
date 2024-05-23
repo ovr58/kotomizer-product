@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 
 import PropTypes from 'prop-types'
 
@@ -7,28 +7,37 @@ import { useSnapshot } from 'valtio'
 import state from '../store'
 import KnobControl from './KnobControl'
 
-const Tab = ({ tab, isTransformTab, handleClick }) => {
+const Tab = ({ tab, isActive, isTransformTab, handleClick }) => {
 
   const snap = useSnapshot(state)
 
   const [ value, setValue ] = useState(0)
 
-  const activeStyles = isTransformTab ? //добавить интерактив на активность?
-    { backgroundColor: snap.color, opacity: 0.5 } :
-    { backgroundColor: "transparent", opacity: 1 }
+  const intersectedState = useMemo(() => snap.intersected)
+
+  useEffect(() => {
+    if (isActive && tab.name === 'rotate') {
+      handleClick(value, intersectedState)
+    }
+  }, [value])
+
+  const activeStyles = isTransformTab && isActive ? 
+  { backgroundColor: "transparent", opacity: 1 } :
+    { backgroundColor: snap.color, }
 
   return (
     <>
       {tab.name == 'rotate' ? 
         <div 
           key={tab.name} 
-          className='tab-btn rounded-full glassmorphism rounded-4' >
-          <KnobControl setValue={setValue} value={value} customStyle='object-contain' />
+          className='tab-btn rounded-full glassmorphism rounded-4' 
+        >
+          <KnobControl setValue={setValue} value={value} customStyle={isActive ? 'opacity-100 fill-black' : 'opacity-50 fill-yellow-100 pointer-events-none'} />
         </div> :
         <div 
           key={tab.name} 
-          className='tab-btn rounded-full glassmorphism rounded-4'
-          onClick={handleClick}
+          className={`tab-btn rounded-full glassmorphism rounded-4 ${isActive ? 'opacity-100': isTransformTab ? 'opacity-50 pointer-events-none' : 'opacity-50'}`}
+          onClick={() => handleClick(value, intersectedState)}
           style={activeStyles}
         >
           <img 
@@ -46,6 +55,7 @@ export default Tab
 
 Tab.propTypes = {
   tab: PropTypes.object,
+  isActive: PropTypes.bool,
   isTransformTab: PropTypes.bool,
   handleClick: PropTypes.func,
 }
