@@ -13,16 +13,18 @@ const Tab = ({ tab, isActive, isTransformTab, handleClick }) => {
 
   const [ value, setValue ] = useState(0)
 
-  const intersectedState = useMemo(() => snap.intersected)
+  const intersectedState = snap.intersected
+
+  const freeCons = snap.freeCons
 
   useEffect(() => {
     if (isActive && tab.name === 'rotate') {
-      handleClick(value, intersectedState)
-    }
+      handleClick(value, intersectedState, freeCons)
+    } 
   }, [value])
 
   const activeStyles = isTransformTab && isActive ? 
-  { backgroundColor: "transparent", opacity: 1 } :
+    { backgroundColor: "transparent", opacity: 1 } :
     { backgroundColor: snap.color, }
 
   return (
@@ -37,7 +39,7 @@ const Tab = ({ tab, isActive, isTransformTab, handleClick }) => {
         <div 
           key={tab.name} 
           className={`tab-btn rounded-full glassmorphism rounded-4 ${isActive ? 'opacity-100': isTransformTab ? 'opacity-50 pointer-events-none' : 'opacity-50'}`}
-          onClick={() => handleClick(value, intersectedState)}
+          onClick={() => handleClick(value, intersectedState, freeCons)}
           style={activeStyles}
         >
           <img 

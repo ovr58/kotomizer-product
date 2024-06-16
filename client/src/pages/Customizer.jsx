@@ -1,7 +1,7 @@
-import React, { useState } from 'react'
+import React, { Suspense, useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 
-import { snapshot, useSnapshot } from 'valtio'
+import { useSnapshot } from 'valtio'
 import state from '../store'
 
 import config from '../config/config'
@@ -9,7 +9,7 @@ import { Parts } from '../config/constants'
 
 import { download } from '../assets'
 
-import { downloadCanvasToImage, positions, reader } from '../config/helpers'
+import { reader } from '../config/helpers'
 import { EditorTabs,  DecalTypes, TransformTabs, alerts } from '../config/constants'
 
 import { fadeAnimation, slideAnimation } from '../config/motion'
@@ -24,31 +24,55 @@ const Customizer = () => {
   
   const [file, setFile] = useState('')
 
-  const freeCons = snap.parts.length>0 ? positions(assemblyMap, snap.parts).freeCons : []
+  const [freeCons, setFreeCons] = useState(snap.freeCons)
+  const [conNumber, setConNumber] = useState(freeCons.length)
+  const [hasParts, setHasParts] = useState(Boolean(assemblyMap.length > 0))
+  const [hasFreeCons, setHasFreeCons] = useState(Boolean(freeCons[0]))
+  const [hasNimbedPart, setHasNimbedPart] = useState(
+    assemblyMap.length>1 ? Boolean(assemblyMap[assemblyMap.length-1].id < 0) : false)
 
-  const [conNumber, setConNumber] = useState(0)
+  useEffect(() => {
+    setFreeCons(snap.freeCons)
+  }, [snap.freeCons.toString()])
 
-  const hasParts = Boolean(assemblyMap.length > 0)
-  const hasFreeCons = snap.parts.length>0 ? Boolean(freeCons[0]) : false
+  useEffect(() => {
+    setHasFreeCons(Boolean(freeCons[0]))
+  }, [freeCons.toString()])
 
-  const hasNimbedPart = () => {
-    return hasParts ? assemblyMap[assemblyMap.length-1].id < 0 : false
-  }
+  useEffect(() => {
+    setHasParts(Boolean(assemblyMap.length > 0))
+  }, [assemblyMap.toString()])
+
+  useEffect(() => {
+    setHasNimbedPart(assemblyMap.length>1 ? Boolean(assemblyMap[assemblyMap.length-1].id < 0) : false)
+  }, [hasParts])
 
   const isRotatable = (partName) => {
 
-    const nimbedPartName = hasNimbedPart() ? assemblyMap[assemblyMap.length-1].name : partName
+    const nimbedPartName = hasNimbedPart ? assemblyMap[assemblyMap.length-1].name : partName
 
     const isRotatable = Parts.filter((part) => part.name==nimbedPartName)[0].rotatable
 
     return isRotatable
   }
 
+  const getPartType = (partName) => {
+    return Parts.filter((part) => part.name==partName)[0].type
+  }
+
   const [partPickerButtonsStatus, setPartPickerButtonsStatus] = useState({
-    undoButton: hasParts && hasNimbedPart(),
-    addButton: !hasNimbedPart() && hasFreeCons,
-    deleteLastButton: !hasNimbedPart() && hasParts
+    undoButton: hasParts && hasNimbedPart,
+    addButton: !hasNimbedPart && hasFreeCons,
+    deleteLastButton: !hasNimbedPart && hasParts
   })
+
+  useEffect(() => {
+    setPartPickerButtonsStatus({
+      undoButton: hasParts && hasNimbedPart,
+      addButton: !hasNimbedPart && hasFreeCons,
+      deleteLastButton: !hasNimbedPart && hasParts
+    })
+  }, [hasFreeCons, hasParts, hasNimbedPart])
 
   const [activeEditorTab, setActiveEditorTab] = useState("")
 
@@ -64,17 +88,17 @@ const Customizer = () => {
         return <ColorPicker />
       case "filepicker":
         return <FilePicker 
-                    file={file}
-                    setFile={setFile}
-                    readFile={readFile}
+                  file={file}
+                  setFile={setFile}
+                  readFile={readFile}
                 />
       case "partspicker":
         return <PartsPicker 
-                    partPickerButtonsStatus={partPickerButtonsStatus}
-                    addToMap={addToMap}
-                    unDoAdd={unDoAdd}
-                    deleteLast={deleteLast}
-                    freeCons={freeCons.filter(freeCon => freeCon.id >= 0)}
+                  partPickerButtonsStatus={partPickerButtonsStatus}
+                  addToMap={addToMap}
+                  unDoAdd={unDoAdd}
+                  deleteLast={deleteLast}
+                  freeCons={freeCons.filter(freeCon => freeCon.id >= 0)}
                />
       default:
         return null
@@ -87,10 +111,10 @@ const Customizer = () => {
     state[decalType.stateProperty] = result
   }
 
-  const handleActiveTransformTab = (tabName, value=0, intersectedState) => {
+  const handleActiveTransformTab = (tabName, value=0, intersectedState, freeCons) => {
     switch (tabName) {
       case "changePosition":
-        setNewPosition(freeCons.filter(freeCon => freeCon.id >= 0))
+        setNewPosition(freeCons)
         break
       case "place":
         placeDetail(intersectedState)
@@ -119,7 +143,8 @@ const Customizer = () => {
     }
     
     const partIndex = assemblyMap.length
-    const firstFreeCon = positions(assemblyMap, snap.parts).freeCons[0]
+    const firstFreeCon = snap.freeCons[0]
+    const partType = getPartType(part)
     
     setPartPickerButtonsStatus({
       undoButton: true,
@@ -134,18 +159,43 @@ const Customizer = () => {
     })
     
     if (partIndex != 0) {
-      !(partIndex !=0 && hasNimbedPart()) && state.assemblyMap.push({
-        id: -partIndex,
-        name: part,
-        connectedTo: [{ id: firstFreeCon.id,
-                        connector: {name: firstFreeCon.conName}
-        }]
-      })
+      if (partType != 'jumper') {
+        !hasNimbedPart && state.assemblyMap.push({
+          id: -partIndex,
+          name: part,
+          type: partType,
+          connectedTo: [{ id: firstFreeCon.id,
+                          connector: {name: firstFreeCon.conName}
+          }],
+          position: [0, 0, 0],
+          rotation: [0, 0, 0]
+        })
+      } else {
+        !hasNimbedPart && state.assemblyMap.push({
+          id: -partIndex,
+          name: part,
+          type: partType,
+          connectedTo: [{
+            id:0,
+            connector: {name: 'jumper1start'},
+            position: [0,0,0]
+         },{
+           id:3,
+           connector: {name: 'jumper1end'},
+           position: [0,0,0]
+           }],
+          position: [0, 0, 0],
+          rotation: [0, 0, 0]
+          } )
+        } 
+      setHasNimbedPart(true)
     } else {
       state.assemblyMap.push({
         id: partIndex,
         name: part,
-        connectedTo: []
+        connectedTo: [],
+        position: [0, 0, 0],
+        rotation: [0, 0, 0]
       })
       setPartPickerButtonsStatus({
         undoButton: false,
@@ -158,6 +208,7 @@ const Customizer = () => {
         rotate:false
       })
     }
+    setHasParts(true)
   }
 
   const unDoAdd = () => {
@@ -179,8 +230,9 @@ const Customizer = () => {
       rotate:false
     })
 
-    if (assemblyMap.length > 0 && hasNimbedPart()) {
+    if (assemblyMap.length > 0 && hasNimbedPart) {
       state.assemblyMap.pop()
+      setHasNimbedPart(false)
     }
   }
 
@@ -203,7 +255,14 @@ const Customizer = () => {
   }
 
   const setNewPosition = (freeCons) => {
-    if (hasNimbedPart() && freeCons[0]) {
+    freeCons = freeCons.filter(freeCon => freeCon.id >= 0)
+    
+    if (hasNimbedPart && freeCons[0]) {
+      if (conNumber > freeCons.length - 1) {
+        setConNumber(0)
+        return
+      }
+      console.log(conNumber, freeCons[conNumber])
       state.assemblyMap[assemblyMap.length-1].connectedTo = [{
         id: freeCons[conNumber].id,
         connector: {name: freeCons[conNumber].conName}
@@ -217,9 +276,11 @@ const Customizer = () => {
 
   const placeDetail = (intersectedState) => {
     
-    if (hasNimbedPart()) {
-      if (intersectedState.length<2) {
+    if (hasNimbedPart) {
+      console.log(intersectedState)
+      if (intersectedState.filter(state => state).length<2) {
         state.assemblyMap[assemblyMap.length-1].id = -state.assemblyMap[assemblyMap.length-1].id
+        setHasNimbedPart(false)
       } else {
         alert(alerts.intersectionDetected.ru)
         return
@@ -242,7 +303,7 @@ const Customizer = () => {
 
   const rotateDetail = (value) => {
 
-    if (hasNimbedPart()) {
+    if (hasNimbedPart) {
 
       if (isRotatable()) {
         state.assemblyMap[assemblyMap.length-1].rotation = [0, value*(Math.PI/180), 0]
@@ -273,8 +334,9 @@ const Customizer = () => {
                     handleClick = {()=>setActiveEditorTab(tab.name === activeEditorTab ? "" : tab.name)}
                   />
                 ))}
-
-                {generateTabContent()}
+                <Suspense>
+                  {generateTabContent()}
+                </Suspense>
               </div>
             </div>
           </motion.div>
@@ -301,7 +363,7 @@ const Customizer = () => {
                     tab={tab}
                     isActive = {activeTransformTab[tab.name]}
                     isTransformTab
-                    handleClick = {(value, intersectedState)=> handleActiveTransformTab(tab.name, value, intersectedState)}
+                    handleClick = {(value, intersectedState, freeCons)=> handleActiveTransformTab(tab.name, value, intersectedState, freeCons)}
                   />
                 ))}
           </motion.div>

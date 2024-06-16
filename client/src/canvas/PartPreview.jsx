@@ -1,6 +1,6 @@
-import React, { Suspense, useMemo, useRef, useState } from 'react'
-import { Float, OrbitControls, Preload, useGLTF } from '@react-three/drei';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import React, { Suspense, useEffect, useMemo, useState } from 'react'
+import { Float, Preload, useGLTF } from '@react-three/drei';
+import { Canvas, useThree } from '@react-three/fiber';
 import { CanvasLoader } from '../components';
 
 import {
@@ -8,35 +8,30 @@ import {
   Select,
   EffectComposer,
   Outline,
-} from '@react-three/postprocessing';
-import { getDistance } from '../config/helpers';
+} from '@react-three/postprocessing'; // для выделения детали с которой хоти работать
+import { getDistance } from '../config/helpers'; // дистанция до камеры чтобы вся деталь вмещалась в поле камеры предпросмотра
+import Camerarig from './Camerarig';
 
-const CameraController = () => {
+const Model = ({ nodes, partModel, setClicked, clicked, setDist }) => {
 
-  const {camera, gl: {domElement}} = useThree();
+  const { scene } = useThree()
 
-  const controls = useRef()
-  
-  useFrame((_state) => {
-    controls.current.update()
-    })
+  useEffect(() => {
+    const countMeshes = () => {
+      let parts = []
+      scene.traverse((object) => {
+        if (object.type == 'Mesh') {
+          parts.push(object)
+      }
+      })
+      return parts
+    }
+    setDist(getDistance(countMeshes(), 0, 25))
+  }, [])
 
-  return <OrbitControls 
-            ref={controls} 
-            args={[camera, domElement]}
-            enableDamping 
-            dampingFactor={0.05} 
-            rotateSpeed={1.5} 
-            autoRotate={true}
-            autoRotateSpeed={10.5} 
-            enableZoom={true} 
-          />
-}
-
-const Model = ({ nodes, partModel, setClicked, clicked }) => {
-
+// определяем состояние наведения курсора на деталь 
   const [hovered, setHover] = useState('')
-
+// выделение <Select> включено если одно из условий выполнено 
   return (
     <Select
         key={partModel.name}
@@ -51,8 +46,7 @@ const Model = ({ nodes, partModel, setClicked, clicked }) => {
         <mesh 
           castShadow 
           receiveShadow 
-          scale={nodes.Detail1.scale}
-          position={[0, -nodes.Detail1.scale.y/2, 0]}
+          position={[0, 0, 0]}
           geometry={nodes.Detail1.geometry}
           material={nodes.Detail1.material}
           onPointerOver={() => setHover(partModel.available ? partModel.name : '')}
@@ -68,42 +62,37 @@ const Model = ({ nodes, partModel, setClicked, clicked }) => {
 
 const PartPreview = ({ partModel, setClicked, clicked }) => {
 
-  const objects = useMemo(() => useGLTF(`/${partModel.name}.glb`))
-  
-  const dist = useMemo(() => getDistance([objects], [], 0.2, 45), [partModel])
+  const [ dist, setDist ] = useState({})
+
+  const object = useMemo(() => useGLTF(`/${partModel.name}.glb`))
 
   return (
     <Canvas
-        frameloop='demand'
-        dpr={[1, 2]}
-        gl={{ preserveDrawingBuffer: false }}
-        camera={{
-          position: [-dist, -dist, -dist],
-          fov: 45,
-          near: 0.1,
-        }}
-        
+      key = {dist.toString()}
+      frameloop='demand'
+      dpr={[1, 2]}
+      gl={{ preserveDrawingBuffer: false }}
     >
-        <Suspense fallback={<CanvasLoader />}>
-          <Selection>
-            <EffectComposer multisampling={3} autoClear={false}>
-              <Outline
-                blur
-                visibleEdgeColor="indianred"
-                edgeStrength={50}
-                width={30}
-              />
-            </EffectComposer>
-            <Model 
-                  nodes = {objects.nodes}
-                  partModel={partModel}
-                  setClicked={setClicked}
-                  clicked = {clicked} />
-          </Selection>
-        </Suspense>
-        <CameraController />
-
-        <Preload all />
+      <Camerarig dist={dist} />
+      <Suspense fallback={<CanvasLoader />}>
+        <Selection>
+          <EffectComposer multisampling={3} autoClear={false}>
+            <Outline
+              blur
+              visibleEdgeColor="indianred"
+              edgeStrength={50}
+              width={30}
+            />
+          </EffectComposer>
+          <Model 
+                nodes = {object.nodes}
+                partModel={partModel}
+                setClicked={setClicked}
+                clicked = {clicked}
+                setDist = {setDist} />
+        </Selection>
+      </Suspense>
+      <Preload all />
     </Canvas>
     );
 }

@@ -1,4 +1,5 @@
-import { ConstantColorFactor, Vector3 } from "three";
+import { Vector3, Box3 } from "three";
+import * as THREE from 'three'
 
 export const downloadCanvasToImage = () => {
   const canvas = document.querySelector("canvas");
@@ -35,25 +36,35 @@ export const getContrastingColor = (color) => {
   return brightness > 128 ? "black" : "white";
 };
 
+// считаем высоту модели в карте сборки
+export const getHeight = (scene, assemblyMap) => {
 
-export const getHeight = (parts, assemblyMap) => {
+  const box = new THREE.Box3()
 
-  let assembledHeightArray = []
-  
+  const objSize = new THREE.Vector3()
+
+  box.getSize(objSize)
+  let assembledHeightArray = [] //переменная для всех высот одного уровня
+//идем по всем инструкциям карты сборки
   for (let instruction of assemblyMap) {
-    let partId = instruction.id
-    let partHeight = parts[Number(instruction.name.replace('part', '')) - 1].nodes.Detail1.scale.y
-    if (partId === 0) {
-      assembledHeightArray.push({id: partId, to: '', height: partHeight})
-    } else {
-      for (let isConncectedTo of instruction.connectedTo) {
-        let objExist = assembledHeightArray.find(obj => obj.to === isConncectedTo.id)
-        if (objExist) {
-          assembledHeightArray[assembledHeightArray.indexOf(objExist)].height = Math.max(objExist.height, partHeight)
-        } else {
-          assembledHeightArray.push({id: partId, to: isConncectedTo.id, height: partHeight})
-        }
-        }
+//если тип детали не jumper
+    if (instruction.type != 'jumper') {
+      let partId = instruction.id
+      let bb = box.copy().setFromObject(parts[Number(instruction.name.replace('part', '')) - 1].nodes.Detail1) 
+      console.log(bb)
+      let partHeight = parts[Number(instruction.name.replace('part', '')) - 1].nodes.Detail1.scale.y
+      if (partId === 0) {
+        assembledHeightArray.push({id: partId, to: '', height: partHeight})
+      } else {
+        for (let isConncectedTo of instruction.connectedTo) {
+          let objExist = assembledHeightArray.find(obj => obj.to === isConncectedTo.id)
+          if (objExist) {
+            assembledHeightArray[assembledHeightArray.indexOf(objExist)].height = Math.max(objExist.height, partHeight)
+          } else {
+            assembledHeightArray.push({id: partId, to: isConncectedTo.id, height: partHeight})
+          }
+          }
+      }
     }
   }
   
@@ -61,64 +72,106 @@ export const getHeight = (parts, assemblyMap) => {
 
   return result
 }
+// считаем дистанцию удаления камеры и поднять камеру на сколько с припуском и в зависимости от fov
+export const getDistance = (parts, padding = 0.7, fov = 25) => {
 
-export const getDistance = (parts, assemblyMap, padding = 0.7, fov = 25) => {
-
-  const height = assemblyMap.length == 0 ? 
-    parts[0].nodes.Detail1.scale.y
-    : getHeight(parts, assemblyMap) + padding
-
-  const width = Math.max(...parts.map(object => object.nodes.Detail1.scale.x), 
-                          ...parts.map(object => object.nodes.Detail1.scale.z)) + padding
+  const partSizeMax = Math.max(...parts.map((part) => Math.max(...getPartSize(part).toArray()))) + padding
 
   const fovToRads = fov * ( Math.PI / 180 )
   
-  return Math.abs( Math.max(height, width) / Math.tan( fovToRads / 2 ) )
+  return {
+    dist: Math.abs( (partSizeMax/2 ) / Math.tan( fovToRads / 2 )), 
+    height: partSizeMax/2
+  }
 
 }
 
 
 export const positions = (assemblyMap, parts) => {
+
+  parts = parts.filter(part => part.type != 'Group')
+
+  parts = parts.filter(part => part.name != 'hitbox')
   
   let freeCons = []
-
-  const height = getHeight(parts, assemblyMap)
-
-  for (let instruction of assemblyMap) {
-    let partId = Math.abs(instruction.id)
-    let catalogId = Number(instruction.name.replace('part', '')) - 1
-    let conNames = Object.keys(parts[catalogId].nodes).filter(conName => conName.includes('con'))
-    if (conNames.length > 0) {
-      for (let conName of conNames) {
-        freeCons.push({
-          id: instruction.id,
-          conName: conName,
-          position: parts[catalogId].nodes[conName].position
-        })
+  
+  if (parts.length != 0) {
+    for (let instruction of assemblyMap) {
+  
+      let partId = Math.abs(instruction.id)
+      let positionClone = []
+  
+      if (instruction.type != 'jumper') {
+  
+        let conNames = Object.keys(parts[partId].userData).filter(conName => conName.includes('con'))
+        if (conNames.length > 0) {
+          for (let conName of conNames) {
+            freeCons.push({
+              id: instruction.id,
+              conName: conName,
+              position: parts[partId].userData[conName].position
+            })
+          }
+        }
+  
+        if (partId === 0) {
+          positionClone = [0, 0, 0]
+        } else {
+          for (let conToPart of instruction.connectedTo) {
+            let fixVector = []
+            fixVector = assemblyMap[conToPart.id].position
+            let xOfBase = parts[conToPart.id].userData[conToPart.connector.name].position.x 
+            let yOfBase = parts[conToPart.id].userData[conToPart.connector.name].position.y
+            let zOfBase = parts[conToPart.id].userData[conToPart.connector.name].position.z
+            positionClone[0] = xOfBase + fixVector[0]
+            positionClone[1] = yOfBase + fixVector[1]
+            positionClone[2] = zOfBase + fixVector[2]
+            freeCons = freeCons.filter(
+              (freeCon) => !(conToPart.id == freeCon.id &&
+              conToPart.connector.name == freeCon.conName)
+            )
+          }
+        }
+      } else {
+        positionClone[0] = instruction.connectedTo[0].position[0]
+        positionClone[1] = instruction.connectedTo[0].position[1]
+        positionClone[2] = instruction.connectedTo[0].position[2]
       }
-    }
-    
-    if (partId === 0) {
-      assemblyMap[0].position = new Vector3(0, -height/2, 0)
-    } else {
-      for (let conToPart of instruction.connectedTo) {
-        let partConToId = Number(assemblyMap[conToPart.id].name.replace('part', '')) - 1
-        let fixVector = assemblyMap[conToPart.id].position
-        let xOfBase = parts[partConToId].nodes[conToPart.connector.name].position.x 
-        let yOfBase = parts[partConToId].nodes[conToPart.connector.name].position.y 
-        let zOfBase = parts[partConToId].nodes[conToPart.connector.name].position.z 
-        let x = xOfBase + fixVector.x
-        let y = yOfBase + fixVector.y
-        let z = zOfBase + fixVector.z
-        let vectorPosition = new Vector3(x, y, z)
-        assemblyMap[partId].position = vectorPosition
-        freeCons = freeCons.filter(
-          (freeCon) => !(conToPart.id == freeCon.id &&
-          conToPart.connector.name == freeCon.conName)
-        )
-      }
+        assemblyMap[partId].position = positionClone
     }
   }
-  
+
   return {newAssemblyMap: assemblyMap, freeCons: freeCons}
+}
+
+export const getPartSize = (part) => {
+
+  const box = new Box3().setFromObject(part)
+
+  const partSize = new Vector3()
+
+  box.getSize(partSize) // взяли размеры
+
+  return partSize
+}
+
+export const isAtPlaces = (assemblyMap, parts) => {
+
+  const partsCopied = []
+
+  parts.forEach((part) => {
+    const partObje = {}
+    partObje.type = part.type
+    partObje.position = part.position.toArray()
+    partObje.rotation = part.rotation.toArray()
+    partObje.rotation.pop()
+    part.type == 'Mesh' && partsCopied.push(partObje)
+  })
+
+  const print1 = assemblyMap.reduce((acum, posAndRot) => 
+    acum = [...acum, ...posAndRot.position, ...posAndRot.rotation], []).toString()
+  const print2 = partsCopied.reduce((acum, posAndRot) => 
+    acum = [...acum, ...posAndRot.position, ...posAndRot.rotation], []).toString()
+  
+  return print1 == print2
 }

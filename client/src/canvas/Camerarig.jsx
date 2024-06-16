@@ -1,51 +1,32 @@
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 
 import PropTypes from 'prop-types'
 
-import { useFrame } from '@react-three/fiber'
-import { easing } from 'maath'
+import { OrbitControls, PerspectiveCamera } from '@react-three/drei'
+import { Vector3 } from 'three'
 
-import { useSnapshot } from 'valtio'
-import state from '../store'
+// настройка камеры при разных экранах
 
-const Camerarig = ({ children }) => {
+const Camerarig = ({ dist }) => {
 
-  const group = useRef()
+  const camera = useRef()
+  const controls = useRef()
 
-  const snap = useSnapshot(state)
-
-  useFrame((state, delta) => {
-    const isBreakpoint = window.innerWidth <= 1260
-    const isMobile = window.innerWidth <= 600
-
-    let targetPosition = [-2.4, 0, -22]
-
-    if (snap.intro) {
-      if (isBreakpoint) targetPosition = [2, 0, -22]
-      if (isMobile) targetPosition = [2, 0.2, -22.5]
-    } else {
-      if (isMobile) targetPosition = [2, 0, -22.5]
-      else targetPosition = [2, 0, -21.5]
-    }
-
-    easing.damp3(state.camera.position, targetPosition, 0.25, delta)
-
-    // easing.dampE(
-    //   group.current.rotation,
-    //   group.current.rotation,
-    //   0.25,
-    //   delta
-    // )
-  })
-
+  useEffect(() => {
+    controls.current.target.copy(new Vector3(0, dist.height, 0))
+    camera.current.position.copy(new Vector3(dist.dist, dist.height, dist.dist))
+  }, [dist])
 
   return (
-    <group ref={group}>{ children }</group>
+    <>
+      <PerspectiveCamera ref={camera} makeDefault position = {[-2.4, 0, 22]} fov={25}/>
+      <OrbitControls ref={controls} autoRotate={true} enableZoom={true} target={[0,dist.height,0]} />
+    </>
   )
 }
 
 export default Camerarig
 
 Camerarig.propTypes = {
-  children: PropTypes.object,
+  dist: PropTypes.object,
 }

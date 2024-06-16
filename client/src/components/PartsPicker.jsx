@@ -22,7 +22,6 @@ function PartsPicker({
   } else {
     Parts.forEach((part) => part.type == 'base' ? part.available = true : part.available = false)
   }
-
   return (
     <div
       className='partpicker-container'

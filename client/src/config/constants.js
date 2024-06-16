@@ -90,6 +90,15 @@ export const Parts = [
     filename: '/part5.glb',
     price: 20,
     description: 'part5 description'
+  },
+  {
+    name: 'part6',
+    type: 'jumper',
+    connectors: [2.122],
+    rotatable: true,
+    filename: '/part6.glb',
+    price: 10,
+    description: 'part6 description'
   }
 ]
 
