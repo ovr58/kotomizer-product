@@ -3,11 +3,11 @@ import React from 'react'
 import { SketchPicker } from 'react-color'
 
 import { useSnapshot } from 'valtio'
-import state from '../store'
+import appState from '../store'
 
 const ColorPicker = () => {
 
-  const snap = useSnapshot(state)
+  const snap = useSnapshot(appState)
 
   return (
     <div 
@@ -30,7 +30,7 @@ const ColorPicker = () => {
           "#ffff99",
           snap.color
         ]}
-        onChange={(color) => state.color = color.hex}
+        onChange={(color) => appState.color = color.hex}
       />
     </div>
   )

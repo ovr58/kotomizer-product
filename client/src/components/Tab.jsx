@@ -1,31 +1,23 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 import PropTypes from 'prop-types'
 
-import { useSnapshot } from 'valtio'
-
-import state from '../store'
+import appState from '../store'
 import KnobControl from './KnobControl'
 
 const Tab = ({ tab, isActive, isTransformTab, handleClick }) => {
 
-  const snap = useSnapshot(state)
-
   const [ value, setValue ] = useState(0)
-
-  const intersectedState = snap.intersected
-
-  const freeCons = snap.freeCons
-
+  
   useEffect(() => {
     if (isActive && tab.name === 'rotate') {
-      handleClick(value, intersectedState, freeCons)
+      handleClick(value, appState.intersected, appState.freeCons)
     } 
   }, [value])
 
   const activeStyles = isTransformTab && isActive ? 
     { backgroundColor: "transparent", opacity: 1 } :
-    { backgroundColor: snap.color, }
+    { backgroundColor: appState.color, }
 
   return (
     <>
@@ -39,7 +31,7 @@ const Tab = ({ tab, isActive, isTransformTab, handleClick }) => {
         <div 
           key={tab.name} 
           className={`tab-btn rounded-full glassmorphism rounded-4 ${isActive ? 'opacity-100': isTransformTab ? 'opacity-50 pointer-events-none' : 'opacity-50'}`}
-          onClick={() => handleClick(value, intersectedState, freeCons)}
+          onClick={() => handleClick(value, appState.intersected, appState.freeCons)}
           style={activeStyles}
         >
           <img 

@@ -72,11 +72,14 @@ export const getHeight = (scene, assemblyMap) => {
 
   return result
 }
+
+
 // считаем дистанцию удаления камеры и поднять камеру на сколько с припуском и в зависимости от fov
-export const getDistance = (parts, padding = 0.7, fov = 25) => {
+export const getDistance = (parts, padding = 0, fov = 25) => {
+
+  parts = [parts, ...parts.children.filter(part => part.name.includes('details'))]
 
   const partSizeMax = Math.max(...parts.map((part) => Math.max(...getPartSize(part).toArray()))) + padding
-
   const fovToRads = fov * ( Math.PI / 180 )
   
   return {
@@ -86,13 +89,9 @@ export const getDistance = (parts, padding = 0.7, fov = 25) => {
 
 }
 
-
 export const positions = (assemblyMap, parts) => {
 
-  parts = parts.filter(part => part.type != 'Group')
-
-  parts = parts.filter(part => part.name != 'hitbox')
-  
+  parts = parts.children.filter(part => (part.type == 'Group' && part.name.includes('details')))
   let freeCons = []
   
   if (parts.length != 0) {
@@ -133,14 +132,13 @@ export const positions = (assemblyMap, parts) => {
           }
         }
       } else {
-        positionClone[0] = instruction.connectedTo[0].position[0]
-        positionClone[1] = instruction.connectedTo[0].position[1]
-        positionClone[2] = instruction.connectedTo[0].position[2]
+        positionClone[0] = instruction.position[0]
+        positionClone[1] = instruction.position[1]
+        positionClone[2] = instruction.position[2]
       }
         assemblyMap[partId].position = positionClone
     }
   }
-
   return {newAssemblyMap: assemblyMap, freeCons: freeCons}
 }
 
@@ -151,11 +149,13 @@ export const getPartSize = (part) => {
   const partSize = new Vector3()
 
   box.getSize(partSize) // взяли размеры
-
+  
   return partSize
 }
 
 export const isAtPlaces = (assemblyMap, parts) => {
+
+  parts = parts.children.filter(part => (part.type == 'Group' && part.name.includes('details')))
 
   const partsCopied = []
 
@@ -165,7 +165,7 @@ export const isAtPlaces = (assemblyMap, parts) => {
     partObje.position = part.position.toArray()
     partObje.rotation = part.rotation.toArray()
     partObje.rotation.pop()
-    part.type == 'Mesh' && partsCopied.push(partObje)
+    partsCopied.push(partObje)
   })
 
   const print1 = assemblyMap.reduce((acum, posAndRot) => 

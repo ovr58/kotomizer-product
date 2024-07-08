@@ -1,11 +1,7 @@
 import React, { useRef } from 'react'
 
 import { useSnapshot } from 'valtio'
-import state from '../store'
-
-import { easing } from 'maath'
-
-import { useFrame } from '@react-three/fiber'
+import appState from '../store'
 
 import { AccumulativeShadows, RandomizedLight } from '@react-three/drei'
 // задний план для модели - плоскость, тени, свет
@@ -13,7 +9,7 @@ const Backdrop = () => {
 
   const shadows = useRef() // ссылка на тени
 
-  const snap = useSnapshot(state)
+  const snap = useSnapshot(appState)
   const stateString = JSON.stringify(snap) // уникальный ключ для обновления картинки
 
   return (

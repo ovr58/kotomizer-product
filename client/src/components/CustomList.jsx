@@ -1,14 +1,14 @@
 import PropTypes from 'prop-types'
 import { useSnapshot } from 'valtio'
 
-import state from '../store'
+import appState from '../store'
 
 import { getContrastingColor } from '../config/helpers'
 import { useState } from 'react'
 
 const CustomList = ({ title, list = [], setOption }) => {
 
-    const snap = useSnapshot(state)
+    const snap = useSnapshot(appState)
     
     const [isOpened, setIsOpened] = useState(false)
 

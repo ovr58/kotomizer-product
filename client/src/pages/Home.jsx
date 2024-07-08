@@ -8,12 +8,12 @@ import {
     slideAnimation
 } from '../config/motion'
 
-import state from '../store'
+import appState from '../store'
 import { CustomButton } from '../components'
 
 const Home = () => {
 
-    const snap = useSnapshot(state)
+    const snap = useSnapshot(appState)
 
   return (
     <AnimatePresence>
@@ -39,7 +39,7 @@ const Home = () => {
                         <CustomButton 
                             type='filled'
                             title='Customize It'
-                            handleClick={() => state.intro = false}
+                            handleClick={() => appState.intro = false}
                             customStyles='w-fit px-4 py-2.5 font-bold text-sm'
                         />
                     </motion.div>

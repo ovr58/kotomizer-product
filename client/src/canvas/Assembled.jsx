@@ -1,205 +1,457 @@
+
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 
 import * as THREE from 'three'
-import { OBB } from 'three/addons/math/OBB.js'
+import { OBB } from 'three/addons/math/OBB.js' // OBB - oriented bounding box отдельный плагин для коробок (есть пример на threejs)
 
 import { useSnapshot } from 'valtio';
-import state from '../store'
+import appState from '../store'
 
-import { getDistance, positions, isAtPlaces } from '../config/helpers'; // вычисление позиций сборки assemblyMap
-import { useGLTF } from '@react-three/drei';
-import { useFrame, useThree } from '@react-three/fiber';
-import { Parts } from '../config/constants';
+// найти расстояние до объекта при настройке камеры, настроить позиции деталей, проверить что детали на местах
+import { getDistance, positions, isAtPlaces } from '../config/helpers'
+// линии для подсветки и выбора граней при установке jumper, загрузка моделей
+import { Line, useGLTF } from '@react-three/drei'
+// проверки в каждом кадре и состояние сцены и камеры для вычислений
+import { useFrame, useThree } from '@react-three/fiber'
+// каталог деталей
+import { Parts } from '../config/constants'
 
 // назначим материал для детали, с которой работаем
 const glowRed = new THREE.MeshBasicMaterial({ opacity: 0.5, transparent: true, color: new THREE.Color(7, 0, 0.5), toneMapped: false })
 
 const Assembled = ({ setDist }) => {
 
-  const snap = useSnapshot(state)
+  const snap = useSnapshot(appState)
   const stateString = JSON.stringify(snap.assemblyMap) // назначаем сроку для уникального ключа группы объектов иначе не обновляется
   const assemblyMap = JSON.parse(stateString) // глубокое копирование объкта карта сборки
-  const objects = useMemo(() => Parts.map((part) => useGLTF(`/${part.name}.glb`)))
+  // грузим все объекты из каталога
+  const objects = useMemo(() => Parts.map((part) => useGLTF(`/${part.name}.glb`)), [Parts.toString(), assemblyMap.toString()])
+
+// возвращаем массивы объектов и материалов для каждой инструкции в карте сборки
 
   const objectArray = (objects) => {
     
-    const userDataArray = []
-    const objectGeometryArray = []
-    const objectMaterialArray = []
-
+    const userDataArray = [] // массив данных для OBB, и коннекторов каждой детали
+    const objectGeometryArray = [] // массив всех геометрий
+    const objectMaterialArray = [] // массив всех материалов (возможна смена материалов)
+    const meshOBB = []
+// если успели загрузить объекты из файла и получить карту сборки не пустую
     if (objects.length>0 && assemblyMap.length>0) {
       assemblyMap.forEach((instruction) => {
-        const objectCons = {}
-        const objectGeometry = new THREE.BufferGeometry()
-        objectGeometry.copy(objects[Number(instruction.name.replace('part', ''))-1].nodes.Detail1.geometry)
-        objectGeometry.computeBoundingBox()
-        objectGeometry.userData.obb = new OBB().fromBox3(
-          objectGeometry.boundingBox
-        )
-        const objectNodes = objects[Number(instruction.name.replace('part', ''))-1].nodes
+        const index = Number(instruction.name.replace('part', ''))-1 // индекс в массиве загруженных деталей
+        const objectNodes = objects[index].nodes // создаем ССЫЛКУ на все ноды объекта
+        const objectCons = {} // пустой объект для хранения информации о коннекторах данной детали
+        const detailsArray = []
+        const detailsMaterialArray = []
+        for (let node of Object.keys(objectNodes)) {
+          if (node.includes('Detail')) {
+            const objectGeometry = new THREE.BufferGeometry() // новая буфергеометрия для mesh
+            objectGeometry.copy(
+              objectNodes[node].geometry // создаем независимую копию геометрии для mesh
+            )
+            objectGeometry.computeBoundingBox() // вычисляем коробку с размерами геометрии
+            objectGeometry.userData.obb = new OBB().fromBox3(
+              objectGeometry.boundingBox // пишем в userData геометрии новый OBB созданный из его коробки
+            )
+            detailsArray.push(objectGeometry)
+            detailsMaterialArray.push(objectNodes[node].material)
+          }
+        }
+        meshOBB.push(new Array(detailsArray.length).fill({obb: new OBB()}))
+// и получим все ключи коннекторов
         const consNames = Object.keys(objectNodes).filter((name) => name.includes('con'))
-        objectCons.obb = new OBB()
+// в последствии чтобы в userData объекта были и объекты коннекторов и ключи obb mesh(а) придется в новый objectCons записать новую инстанс OBB
+        // objectCons.obb = new OBB() ВЕРСИЯ С ГРУППАМИ НЕ НУЖЕН OBB 
+// записывем в objectCons все пары ключ (имя коннектора) значение (ССЫЛКА на объект коннектора)
         consNames.forEach((key) => {
           objectCons[key] = objectNodes[key]
         })
-        userDataArray.push(objectCons)
-        objectGeometryArray.push(objectGeometry)
-        objectMaterialArray.push(objects[Number(instruction.name.replace('part', ''))-1].nodes.Detail1.material)
+        userDataArray.push(objectCons) // записали 
+        objectGeometryArray.push(detailsArray) // записали
+        objectMaterialArray.push(detailsMaterialArray) // ССЫЛКА на материал
       })
     }
-    return {userDataArray, objectGeometryArray, objectMaterialArray}
+    return {userDataArray, objectGeometryArray, objectMaterialArray, meshOBB}
   }
 
-  const setObjectArray = useMemo(() => objectArray(objects))
+const setObjectArray = useMemo(() => objectArray(objects), [objects]) // вызвали и записали "памятку"
 
-  const { scene } = useThree()
+const { scene, camera } = useThree() // получили состояние сцены и камеры
 
-  const findIntersections = () => {
-    let intersections = []
-    placedDetail.current.geometry.computeBoundingBox()
-    placedDetail.current.geometry.userData.obb.fromBox3(
-      placedDetail.current.geometry.boundingBox
-    )
-    placedDetail.current.userData.obb.copy(placedDetail.current.geometry.userData.obb)
-    placedDetail.current.userData.obb.applyMatrix4(placedDetail.current.matrixWorld)
-    details.current.forEach((detail) => {
-      if (detail) {
-        if (detail.type == 'Mesh') {
-          detail.geometry.computeBoundingBox()
-          detail.geometry.userData.obb.fromBox3(
-            detail.geometry.boundingBox
-          )
-          detail.userData.obb.copy(detail.geometry.userData.obb)
-          detail.userData.obb.applyMatrix4(detail.matrixWorld)
-          console.log(placedDetail.current, detail)
-          intersections.push(placedDetail.current.userData.obb.intersectsOBB(detail.userData.obb))
-        }
+const findIntersections = () => {
+
+// поиск наложений (постоянного оверлапа) объектов в сцене
+  let intersections = [] // будем возвращать массив с объектами с информацией о пересечении
+  placedDetail.current.geometry.computeBoundingBox() // вычисляем актуальный бокс для геометрии объекта с которым работаем
+  placedDetail.current.geometry.userData.obb.fromBox3(
+    placedDetail.current.geometry.boundingBox // обновляем OBB в геометрии из этой коробки 
+  )
+  // помещаем независимый OBB в данные mesh
+  placedDetail.current.userData.obb.copy(placedDetail.current.geometry.userData.obb)
+  // применяем матрицы глобальных изменений данного объекта к ориентированной коробке
+  placedDetail.current.userData.obb.applyMatrix4(placedDetail.current.matrixWorld)
+  // делаем все тоже самое для всех остальных объектов сцены по ссылкам
+  details.current.forEach((detail) => {
+    if (detail) {
+      if (detail.type == 'Mesh') { // нужны только mesh
+        detail.geometry.computeBoundingBox()
+        detail.geometry.userData.obb.fromBox3(
+          detail.geometry.boundingBox
+        )
+        detail.userData.obb.copy(detail.geometry.userData.obb)
+        detail.userData.obb.applyMatrix4(detail.parent.matrixWorld)
+        // пишем результат в массив
+        intersections.push(placedDetail.current.userData.obb.intersectsOBB(detail.userData.obb))
       }
-    })
-    console.log(intersections)
-    return intersections
+    }
+  })
+  console.log(intersections)
+  return intersections
+}
+
+const placeJumperOnPosition = (pointsArray) => {
+// функция этапа трансформации джампера на выбранных ребер передали массив объектов {имя mesh: [Vector3 вертекса начала, конца]}
+// нужны все имена объектов на которых лежат выбранные ребра и ССЫЛКИ на точки начала и конца ребер 
+  const namesOfObjects = Object.keys(pointsArray[0]).concat(Object.keys(pointsArray[1]))
+  const pointStart1 = Object.values(pointsArray[0])[0][0]
+  const pointEnd1 = Object.values(pointsArray[0])[0][1]
+  const pointStart2 = Object.values(pointsArray[1])[0][0]
+  const pointEnd2 = Object.values(pointsArray[1])[0][1]
+  
+// вектора ребер
+  const rails = [
+    new THREE.Vector3().subVectors(
+      pointStart1, pointEnd1
+    ),
+    new THREE.Vector3().subVectors(
+      pointStart2, pointEnd2
+    )
+  ]
+
+// проверяем направление векторов ребер (из начала в конец) - 
+// если разное (отрицательный дот продукт) меняем местами координаты начала и конца одного из ребер
+
+  if (rails[0].dot(rails[1])<0) {
+    const tempVector = pointStart2.clone()
+    pointStart2.copy(pointEnd2)
+    pointEnd2.copy(tempVector)
   }
+// вычисляем кросс вектор обоих векторов ребер
+  const crossVectors = 
+    new THREE.Vector3().crossVectors(rails[0], rails[1])
+// проверяем на параллельность выбранные ребра но с погрешностью до меньшего целого (при повороте деталей вылезал баг непараллельности)
+// возможно надо будет сделать округление более точным!!!
+  if (Math.floor(crossVectors.length()) === 0) {
+    console.log('Параллельны!')
+
+// назначение линий нужны для вычислений
+    
+    const line1 = new THREE.Line3()
+    const line2 = new THREE.Line3()
+// основание джампера (место его точки привязки) будет всегда ниже
+    if (pointStart1.y <= pointStart2.y) {
+      line1.set(pointStart1, pointEnd1)
+      line2.set(pointStart2, pointEnd2)
+    } else {
+      line1.set(pointStart2, pointEnd2)
+      line2.set(pointStart1, pointEnd1)
+      namesOfObjects.reverse() // если меняем местами то и имена деталей в массиве перевернем местами
+    }
+
+// определение точек ближайших к pointStart1 ... pointEnd2 на соответствующих линиях
+// либо перпендикуляр либо прямая большей длины - результат поиска - для вычисления наложений ребер 
+
+    const closestFromStart1 = new THREE.Vector3()
+    const closestFromStart2 = new THREE.Vector3()
+    const closestFromEnd1 = new THREE.Vector3()
+    const closestFromEnd2 = new THREE.Vector3()
+    line2.closestPointToPoint(line1.start, true, closestFromStart1)
+    line2.closestPointToPoint(line1.end, true, closestFromEnd1)
+    line1.closestPointToPoint(line2.start, true, closestFromStart2)
+    line1.closestPointToPoint(line2.end, true, closestFromEnd2)
+
+// проверка дистанций и выбор кратчайших
+
+    const distLine1StartToLine2 = new THREE.Line3(line1.start, closestFromStart1)
+    const distLine2StartToLine1 = new THREE.Line3(line2.start, closestFromStart2)
+    const distLine1EndToLine2 = new THREE.Line3(line1.end, closestFromEnd1)
+    const distLine2EndToLine1 = new THREE.Line3(line2.end, closestFromEnd2)
+// если ребра в пространстве не накладываются при параллельном переносе - то джампер не установить
+// возможно далее будет вид джампера с дуговым соедениением
+    if (closestFromStart1.equals(closestFromEnd1) || closestFromStart2.equals(closestFromEnd2)) {
+      alert('Нет возможности установить данный элемент!')
+      return
+    }
+
+// присвоение точкам кратчайших дистанций статуса началов и концов нужных рельс 
+// для перемешения и масштабирования джампера
+    
+    const startOnLine1 = new THREE.Vector3()
+    const startOnLine2 = new THREE.Vector3()
+    const endOnLine1 = new THREE.Vector3()
+    const endOnLine2 = new THREE.Vector3()
+
+    if (distLine1StartToLine2.distance()<=distLine2StartToLine1.distance()) {
+      startOnLine1.copy(line1.start)
+      startOnLine2.copy(closestFromStart1)
+    } else {
+      startOnLine1.copy(closestFromStart2)
+      startOnLine2.copy(line2.start)
+    }
+    if (distLine1EndToLine2.distance()<=distLine2EndToLine1.distance()) {
+      endOnLine1.copy(line1.end)
+      endOnLine2.copy(closestFromEnd1)
+    } else {
+      endOnLine1.copy(closestFromEnd2)
+      endOnLine2.copy(line2.end)
+    }
+
+// задаем центры отрезков
+    const center1 = new THREE.Vector3()
+    const center2 = new THREE.Vector3()
+    const railLength = new THREE.Line3(startOnLine1, endOnLine1)
+    railLength.getCenter(center1)
+    new THREE.Line3(startOnLine2, endOnLine2).getCenter(center2)
+// настроим райкастер для определения препятствий на пути джампера
+    const raycaster = new THREE.Raycaster()
+// сначала от камеры в сцене из useThree выше иначе дает ошибку
+    raycaster.setFromCamera(new THREE.Vector2(), camera)
+// настроим новый луч из "нижнего" центра в верхний
+    raycaster.set(center1, center2.clone().sub(center1).normalize())
+// запишем все на пути луча
+    let intersects = raycaster.intersectObjects(scene.children)
+// запишем дистанцию от "нижнего" центра до верхнего (до сотых)
+    const distance = Number(center1.distanceTo(center2).toFixed(2))
+
+// отфильтруем сначала все пересечения с нулевой дистанцией или дистанцией равное расстоянию между центрами
+// И все пересечения с объектами содержащими наши ребра или если луч почему то задел что то дальше нашего верхнего ребра
+// эта ошибка было до того как правильно настроили луч - потом возможно данный фильтре не нужен
+    intersects = intersects.filter(
+      intersect => !(
+        (Number(intersect.distance.toFixed(2)) == 0 || 
+          Number(intersect.distance.toFixed(2)) == distance) && 
+        (namesOfObjects.indexOf(intersect.object.name)>=0) ||
+          Number(intersect.distance.toFixed(2)) > distance)
+// затем отфильтруем все пересечения с самим джампером
+      ).filter(
+        intersect => !intersect.object.name.includes('jumper')
+      )
+// если ничего не осталось ничего в массиве продолжим
+    if (intersects.length === 0) {
+      console.log('Нет пересечений!')
+// определяем вектора направлений по координатным осям
+      const y = new THREE.Vector3().subVectors(center2, center1).normalize()
+      const x = new THREE.Vector3().subVectors(startOnLine1, center1).normalize()
+      const z = new THREE.Vector3().crossVectors(x, y)
+// создаем матрицу из векторов направлений
+      const matrix = new THREE.Matrix4().makeBasis(x, y, z)
+// получаем трансформацию поворота из матрицы
+      const euler = new THREE.Euler().setFromRotationMatrix(matrix)
+// индекс объекта с которым работаем в карте сборки (модуль)
+      const index = Math.abs(Number(placedDetail.current.name.split('/')[0]))
+// для получения размерностей детали обновим OBB детали и получим из него размеры по Y и X
+      findIntersections()
+      const lengthY = placedDetail.current.userData.obb.halfSize.y*2
+      const lengthX = placedDetail.current.userData.obb.halfSize.x*2
+// настроим скалярный множитель по Y и X на отношение расстояния между центрами и размера по Y и X соотцетственно
+      placedDetail.current.scale.y = distance/lengthY
+      placedDetail.current.scale.x = railLength.distance()/lengthX
+// позиционируем в центр 1
+      placedDetail.current.position.copy( center1 )
+// присваиваем ейлер поворота
+      placedDetail.current.rotation.copy( euler )
+// записываем все в глобальное состояние карты сборки
+      appState[index].position = center1.toArray()
+      appState[index].rotation = placedDetail.current.rotation.toArray()
+      appState[index].scale = placedDetail.current.scale.toArray()
+      appState[index].maxScale = railLength.distance()/lengthX
+      appState[index].connectedTo[0] = {
+        id: namesOfObjects[0].split('/')[0],
+        connector: {name: 'jumper1start'},
+        position: railLength.start
+      }
+      appState[index].connectedTo[1] = {
+        id: namesOfObjects[0].split('/')[0],
+        connector: {name: 'jumper1start'},
+        position: railLength.end
+      }
+    } else {
+      console.log(intersects)
+      alert('Препятствия недопустимы!')
+      return
+    }
+  } else {
+    alert('Грани должны быть параллельны!')
+    const newPoints = {}
+    newPoints[Object.keys(pointsArray[0])[0]] = hlinePoints
+    setPointsArray([newPoints])
+  }
+ 
+}
+
+const placeOnEdge = (e) => {
+// функция размещения на ребре обозначающих линий и передачи обработки двух линий на placeJumperOnPosition
+// кликнули по самому джамперу или по детали типа перфо (на них нельзя ставить джамперы) возвращаем
+  if ('jumperperfo'.includes(e.eventObject.name.split('/')[2])) {
+    return
+  }
+// имя точки обозначаем именем объекта по которому кликнули
+  const pointName = e.eventObject.name
+// индекс детали с которой работаем в карте сборки
+  const index = Math.abs(Number(placedDetail.current.name.split('/')[0]))
+// обнуляем состояние джампера в карте сборки для задания нового положения и трансформации
+  appState[index].position = [0, 0, 0]
+  appState[index].rotation = [0, 0, 0]
+  appState[index].scale = [1, 1, 1]
+  appState[index].maxScale = 1
+  appState[index].connectedTo[0] = {
+    id: 0,
+    connector: {name: 'jumper1start'},
+    position: [0, 0, 0]
+  }
+  appState[index].connectedTo[1] = {
+    id: 0,
+    connector: {name: 'jumper1start'},
+    position: [0, 0, 0]
+  }
+// если в массиве точек только одна запись (один объект с точками) будем записывать второй и запускать placeJumperOnPosition
+  if (pointsArray.length === 1) {
+    // если в массиве точек еще нет данного имени объекта добавляем новый объект с точками ребер
+    if (!pointsArray[0].hasOwnProperty(pointName)) {
+      const newPoints = {}
+      newPoints[pointName] = hlinePoints
+      setPointsArray([pointsArray[0], newPoints])
+      placeJumperOnPosition([pointsArray[0], newPoints])
+    // иначе добавляем заменяем объект с точками ребер в локальном состоянии
+    } else {
+      const newPoints = {}
+      newPoints[pointName] = hlinePoints
+      setPointsArray([newPoints])
+    }
+// если нет ниодного объекта с точками ребер или их больше одного то начинаем новый цикл добавления ребер
+  } else {
+    const newPoints = {}
+    newPoints[pointName] = hlinePoints
+    setPointsArray([newPoints])
+  }
+}
+
+const highlightEdge = (e) => {
+// функция подсветки ребер линиями
+// если наведено на объект джампер или перво типа то обнуляем длину линии подсветки ребра и возврат
+  if ('jumperperfo'.includes(e.eventObject.name.split('/')[2])) {
+    setHlinePoints([0,0,0],[0,0,0])
+    return
+  }
+// получаем все пересечения курсора с объектами сцены
+  const intersections = e.intersections
+// ничего нет - возврат
+  if (intersections.length == 0) return
+// локальная точка пересечения и ближайшая точка к точке пересечения на ребре
+  let localPoint = new THREE.Vector3()
+  let closestPoint = new THREE.Vector3();
+
+// позиция геометрии объекта на который навели для корректировки локальных координат
+  const pos = e.eventObject.geometry.attributes.position
+
+// индексы вертексов фэйса на который попал курсор
+  let faceIdx = intersections[0].face;
+// вектор направления по оси Y нормаль
+  let yVector = new THREE.Vector3().set(0, 1, 0)
+// массив линий всех ребер фэйса на который попал курсор
+  let lines = [
+    new THREE.Line3(
+      new THREE.Vector3().fromBufferAttribute(pos, faceIdx.a),
+      new THREE.Vector3().fromBufferAttribute(pos, faceIdx.b)
+    ),
+    new THREE.Line3(
+      new THREE.Vector3().fromBufferAttribute(pos, faceIdx.b),
+      new THREE.Vector3().fromBufferAttribute(pos, faceIdx.c)
+    ),
+    new THREE.Line3(
+      new THREE.Vector3().fromBufferAttribute(pos, faceIdx.c),
+      new THREE.Vector3().fromBufferAttribute(pos, faceIdx.a)
+    )
+  ].filter((line) => new THREE.Vector3().subVectors(line.start, line.end).normalize().dot(yVector) === 0) 
+// отфильтровали массив линий по вертикальности к оси Y ,МОЖЕТ ЛИ БЫТЬ У ФЭЙСОВ БОЛЬШЕ ТРЕХ ЛИНИЙ?
+  
+  let edgeIdx = 0
+// корректируем локальные координаты точки пересечения в мировые по отношению к объекту наведения курсора
+  e.eventObject.worldToLocal(localPoint.copy(intersections[0].point))
+// задаем минимальную дистанцию от курсора до ребра
+  let minDistance = 1  
+  for (let i = 0; i < lines.length; i++) {
+// ближайшая точка к локал поинт на ребре i
+    lines[i].closestPointToPoint(localPoint, true, closestPoint)
+// расстояние до ближайшей точки от точки курсора
+    let dist = localPoint.distanceTo(closestPoint)
+// если расстояние до курсора меньше минимального то минимальное расстояние теперь равно расстоянию до курсора
+// индекс ребра равен индексу линии
+    if (dist < minDistance) {
+      minDistance = dist
+      edgeIdx = i
+    }
+  }
+// если линия с таким индексом существует и у нее есть начало и конец то присваиваем состоянию массив точек начала и конца этой линии
+  if (lines[edgeIdx] && lines[edgeIdx].start && lines[edgeIdx].end) {
+    let pStart = e.eventObject.localToWorld(lines[edgeIdx].start)
+    let pEnd = e.eventObject.localToWorld(lines[edgeIdx].end)
+// если точки заданы в трехмерном пространстве - задаем состояние
+    if (pStart.x && pStart.y && pStart.z && pEnd.x && pEnd.y && pEnd.z) {
+      setHlinePoints([pStart, pEnd])
+      }
+  }
+}
+
 // ref на группу
   const groupAssembled = useRef()
 // ref детали в DOM с которой работаем
   const placedDetail = useRef()
+// ref деталей в сцене остальных
   const details = useRef([])
+// ссылки на линии для подсветки и обозначения ребер
+  const lines = useRef([])
+  const highLightLine = useRef()
 // state для анимации материала детали с которой работаем
   const [animationVector, setAnimationVector] = useState(0.6)
+// состояния точек ребер для подсветки места и установки джампера
+  const [pointsArray, setPointsArray] = useState([])
+  const [hlinePoints, setHlinePoints] = useState([])
 // state для хранения состояния деталей (поворот, положение) до изменений
   const [prevMeshCount, setPrevMeshCount] = useState(0)
 // покадровая анимация материала и контроль изменений объекта с которым работаем
-  useFrame((state, delta) => {
+  useFrame((_state, delta) => {
     
-    const opacity = glowRed.opacity // получаем прозрачность материала
-    if (opacity > 0.99) {setAnimationVector(-0.6)} //если значение больше
-    else if (opacity <0.6) {setAnimationVector(0.6)} // или меньше границ разворачиваем вектор анимации
-    glowRed.opacity += animationVector * delta // назначаем актуальную прозрачность сдвинутую на вектор и дельту
-// получаем состояние объектов актуальное
-    const countMeshes = () => {
-      let a=[]
-      let parts = []
-      state.scene.traverse((object) => {
-        if (object.type == 'Mesh' || (object.type == 'Group' && object.name == 'groupAssembled')) {
-          a.push(...object.position.toArray(), ...object.rotation.toArray())
-          parts.push(object)
-      }
-      })
-      return {a, parts}
+    if (placedDetail.current) {
+      const opacity = placedDetail.current.material.opacity // получаем прозрачность материала
+      if (opacity > 0.99) {setAnimationVector(-0.6)} //если значение больше
+      else if (opacity <0.6) {setAnimationVector(0.6)} // или меньше границ разворачиваем вектор анимации
+      placedDetail.current.material.opacity += animationVector * delta // назначаем актуальную прозрачность сдвинутую на вектор и дельту
     }
+    
 
-    // const findIntersections = () => {
-    //   let intersections = []
-    //   placedDetail.current.geometry.computeBoundingBox()
-    //   placedDetail.current.geometry.userData.obb.fromBox3(
-    //     placedDetail.current.geometry.boundingBox
-    //   )
-    //   placedDetail.current.userData.obb.copy(placedDetail.current.geometry.userData.obb)
-    //   placedDetail.current.userData.obb.applyMatrix4(placedDetail.current.matrixWorld)
-    //   details.current.forEach((detail) => {
-    //     if (detail) {
-    //       if (detail.type == 'Mesh') {
-    //         detail.geometry.computeBoundingBox()
-    //         detail.geometry.userData.obb.fromBox3(
-    //             detail.geometry.boundingBox
-    //         )
-    //         detail.userData.obb.copy(detail.geometry.userData.obb)
-    //         detail.userData.obb.applyMatrix4(detail.matrixWorld)
-    //         console.log(placedDetail.current, detail, 'useFrame')
-    //         intersections.push(placedDetail.current.userData.obb.intersectsOBB(detail.userData.obb))
-    //       }
-    //     }
-    //   })
-    //   return intersections
-    // }
 // сравниваем с предыдущим состоянием по качеству и кол-ву если есть изменения
 // назначаем новое состояние для пересечений и высоты и меняем состояние до изменений
-  let sceneDetails = countMeshes()
-  let stateOfGroup = sceneDetails.a
-  let partsOfGroup = sceneDetails.parts  
+  let sceneDetails = groupAssembled.current
+  let stateOfGroup = sceneDetails.children.reduce((acc, child) => [...acc, child.position.toArray(), child.rotation.toArray()], []).toString()
   if (
-      prevMeshCount.length != stateOfGroup.toString().length || 
-      prevMeshCount != stateOfGroup.toString()) 
+      prevMeshCount.length != stateOfGroup.length || 
+      prevMeshCount != stateOfGroup) 
       {
-        setPrevMeshCount(stateOfGroup.toString())
-        if (partsOfGroup.length>1) {
-          console.log('from useFrame', partsOfGroup)
-          setDist(getDistance(partsOfGroup))
-          if (placedDetail.current && isAtPlaces(assemblyMap, partsOfGroup)) {
-            state.intersected = findIntersections(partsOfGroup)      
+        setPrevMeshCount(stateOfGroup)
+        if (sceneDetails) {
+          setDist(getDistance(sceneDetails)) // новая позиция камеры относительно высоты объекта
+          if (placedDetail.current && isAtPlaces(assemblyMap, sceneDetails)) {
+// если есть деталь с которой работаем и все детали сцены на позициях карты сборки
+// находим пересечения и записываем в глобальное состояние
+            console.log('stated', findIntersections())
+            const intersected = findIntersections()
+            appState.intersected = intersected  
           }
         }
-        // setJumperRailsPointsArray(jumperRailsPoints())
       }
   })
   
-  // useEffect (() => {
-  //   const sphereGroupObj = scene.getObjectByName('sphereGroup')
-  //   console.log(sphereGroupObj.name)
-  //   if (sphereGroupObj.name) {
-  //     sphereGroupObj.traverse((object) => {
-  //       if (object.name.includes('point')) {
-  //         object.removeFromParent()
-  //         object.geometry.dispose()
-  //         if (Array.isArray(object.material)) {
-  //           object.material.forEach(material => {
-  //               material.dispose();
-  //               if (material.map) material.map.dispose();
-  //               if (material.lightMap) material.lightMap.dispose();
-  //               if (material.bumpMap) material.bumpMap.dispose();
-  //               if (material.normalMap) material.normalMap.dispose();
-  //               if (material.specularMap) material.specularMap.dispose();
-  //               if (material.envMap) material.envMap.dispose();
-  //           });
-  //       } else {
-  //           object.material.dispose();
-  //           if (object.material.map) object.material.map.dispose();
-  //           if (object.material.lightMap) object.material.lightMap.dispose();
-  //           if (object.material.bumpMap) object.material.bumpMap.dispose();
-  //           if (object.material.normalMap) object.material.normalMap.dispose();
-  //           if (object.material.specularMap) object.material.specularMap.dispose();
-  //           if (object.material.envMap) object.material.envMap.dispose();
-  //       }
-  //       console.log('удалил', object)
-  //       object = null
-  //       }
-  //     })
-
-  //     const sphereGeometry = new THREE.SphereGeometry(0.1, 8, 8);
-  //     const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-      
-  //     jumperRailsPointsArray.forEach((pointVector) => {
-  //           const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial)
-  //           sphere.position.copy(pointVector)
-  //           sphere.name = `point${pointVector.toArray().toString()}`
-  //           sphereGroupObj.add(sphere)
-  //       })
-  //   }
-  //     console.log('do')
-
-  // }, [jumperRailsPointsArray.map(
-  //   vector => `${vector.x.toFixed(2)} ${vector.y.toFixed(2)} ${vector.z.toFixed(2)}`
-  // ).toString()]) // добавим точки пути на сцену и удалим старые точки
   
   const listOfChanges = [assemblyMap.length, 0, 0, 0] // массив изменений которые отслеживаем в карте сборки чтобы переназанчить вектора объектов в сцене
 // если длина карты сборки больше нуля то помещаем в массив отслеживаемых изменений id последнего объекта он же тот объект с которым работаем если он уже на что-то установлен (уже добавился объект connectedTo) в массив добавим id детали к которой присоединен и имя коннектора на этой детали
@@ -212,25 +464,26 @@ const Assembled = ({ setDist }) => {
   }
 // при изменении списка отслеживаемых изменений перерасчитываем позиции деталей в сцене 
   useEffect(() => {
-
-    const countMeshes = () => {
-      let parts = []
-      scene.traverse((object) => {
-        if (object.type == 'Mesh' || (object.type == 'Group' && object.name == 'groupAssembled')) {
-          parts.push(object)
-      }
-      })
-      return {parts}
+// если есть деталь с которой работаем останавливаем вращение камеры иначе восстанавливаем вращение
+// так же обнуляем массивы для подсветки ребер 
+    if (placedDetail.current) {
+      appState.camRotation = !placedDetail.current.name.includes('jumper')
+    } else {
+      appState.camRotation = true
+      setPointsArray([])
+      setHlinePoints([])
     }
 
-    let sceneDetails = countMeshes()
-    if (sceneDetails.parts.length>0) {
-      setDist(getDistance(sceneDetails.parts))
-      const getAssemble = positions(assemblyMap, sceneDetails.parts)
-      state.assemblyMap = getAssemble.newAssemblyMap 
-      state.freeCons = getAssemble.freeCons
-      if (placedDetail.current && isAtPlaces(getAssemble.newAssemblyMap, sceneDetails.parts)) {
-        state.intersected = findIntersections(sceneDetails.parts)
+    const sceneDetails = groupAssembled.current
+    if (sceneDetails) {
+      setDist(getDistance(sceneDetails))
+      const getAssemble = positions(assemblyMap, sceneDetails)
+      appState.assemblyMap = getAssemble.newAssemblyMap 
+      appState.freeCons = getAssemble.freeCons
+      if (placedDetail.current && isAtPlaces(getAssemble.newAssemblyMap, sceneDetails)) {
+        console.log('useEffect stated')
+        const intersected = findIntersections()
+        appState.intersected = intersected
       }
     }
     }, listOfChanges)
@@ -246,33 +499,57 @@ const Assembled = ({ setDist }) => {
       {(objects.length > 0 && setObjectArray) && //если успели получить объекты
        assemblyMap.map((instruction, i) => {
         return(//получаем инструкции последовательно из карты сборки
-         <mesh
-            ref={instruction.id<0 ? placedDetail : (el) => (details.current[i] = el)} //если id отрицательный - назначаем ссылку 
+          <group
             key={Math.abs(instruction.id)} //уникальный ключ
-            name={instruction.id<0 ? 'placedDetail' : `${instruction.name}/${instruction.id}` } //использовать для получения типа
-            castShadow 
-            receiveShadow 
+            name={`${instruction.id}/${instruction.name}/${instruction.type}/details` } //использовать для получения типа
             position={instruction.position}
             rotation={instruction.rotation}
-            geometry={setObjectArray.objectGeometryArray[i]}
+            scale={instruction.scale ? instruction.scale : [1,1,1]}
             userData={setObjectArray.userDataArray[i]}
-  // работаем с материалом либо назначаем светящийся
-            material={instruction.id >= 0 ? setObjectArray.objectMaterialArray[i] : glowRed}
-            visible={true}
-         >
-        </mesh>
-      )})}
+            castShadow 
+            receiveShadow
+            dispose={null}
+          >
+            {setObjectArray.objectGeometryArray[i].map((detailOfGroup, iOfDetail) => (
+              <mesh
+                ref={instruction.id<0 ? placedDetail : (el) => (details.current[Number(`${i}${iOfDetail}`)] = el)} //если id отрицательный - назначаем ссылку 
+                key={`${Math.abs(instruction.id)}/${iOfDetail}`}
+                castShadow 
+                receiveShadow 
+                geometry={detailOfGroup}
+      // работаем с материалом либо назначаем светящийся
+                material={instruction.id >= 0 ? setObjectArray.objectMaterialArray[i][iOfDetail] : glowRed}
+                userData={setObjectArray.meshOBB[i][iOfDetail]}
+                visible={true}
+                onPointerMove={placedDetail.current && placedDetail.current.name.includes('jumper') ? 
+                  (e) => highlightEdge(e) : null}
+                onClick={placedDetail.current && placedDetail.current.name.includes('jumper') ? 
+                  (e) => placeOnEdge(e) : null}
+              >
+              </mesh>
+            ))}
+          </group>
+  )})}
+        {hlinePoints.length > 0 &&
+          <Line 
+            ref={highLightLine} 
+            key={hlinePoints.toString()} 
+            points={hlinePoints} 
+            color="red"
+            lineWidth={4} 
+          />}
+        {pointsArray.length > 0 && pointsArray.map((points, i) => (
+          <Line 
+            ref={(el) => (lines.current[i] = el)} 
+            key={`rail${JSON.stringify(points)}`} 
+            points={Object.values(points)[0]} 
+            color="blue"
+            lineWidth={4} 
+          />
+        ))
+        }
     </group>
   )
 }
 
 export default Assembled
-
-// 
-
-
-
-// pointsToMoveAlong.forEach((pointVector) => {
-//     sphere.position.copy(pointVector)
-//     scene.add(sphere)
-// })

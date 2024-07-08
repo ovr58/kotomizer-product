@@ -1,7 +1,7 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 
 import { Canvas, extend } from '@react-three/fiber'
-import { Effects, BakeShadows, Center, OrbitControls, PerspectiveCamera } from '@react-three/drei'
+import { Effects, BakeShadows } from '@react-three/drei'
 import { UnrealBloomPass } from 'three-stdlib'
 
 extend({ UnrealBloomPass }) // эффект глоу материала

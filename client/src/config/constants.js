@@ -53,7 +53,8 @@ export const Parts = [
     rotatable: false,
     filename: '/part1.glb',
     price: 10,
-    description: 'part1 description'
+    description: 'part1 description',
+    available: true
   },
   {
     name: 'part2',
@@ -62,44 +63,79 @@ export const Parts = [
     rotatable: false,
     filename: '/part2.glb',
     price: 5,
-    description: 'part2 description'
+    description: 'part2 description',
+    available: false
   },
   {
     name: 'part3',
-    type: 'head',
-    connectors: [],
-    rotatable: true,
+    type: 'perfo',
+    connectors: ['con1out'],
+    rotatable: false,
     filename: '/part3.glb',
-    price: 20,
-    description: 'part3 description'
+    price: 10,
+    description: 'part3 description',
+    available: false
   },
   {
     name: 'part4',
-    type: 'head',
-    connectors: [],
-    rotatable: true,
+    type: 'perfo',
+    connectors: ['con1out'],
+    rotatable: false,
     filename: '/part4.glb',
-    price: 15,
-    description: 'part4 description'
+    price: 2,
+    description: 'part4 description',
+    available: false
   },
   {
     name: 'part5',
-    type: 'head',
-    connectors: [],
+    type: 'hause',
+    connectors: ['con1out'],
     rotatable: true,
     filename: '/part5.glb',
-    price: 20,
-    description: 'part5 description'
+    price: 57,
+    description: 'part5 description',
+    available: false
   },
   {
     name: 'part6',
     type: 'jumper',
-    connectors: [2.122],
+    connectors: [2.12],
     rotatable: true,
     filename: '/part6.glb',
     price: 10,
-    description: 'part6 description'
-  }
+    description: 'part6 description',
+    available: false
+  },
+  {
+    name: 'part7',
+    type: 'head',
+    connectors: ['con1out'],
+    rotatable: true,
+    filename: '/part7.glb',
+    price: 20,
+    description: 'part7 description',
+    available: false
+  },
+  {
+    name: 'part8',
+    type: 'head',
+    connectors: ['con1out'],
+    rotatable: true,
+    filename: '/part8.glb',
+    price: 15,
+    description: 'part8 description',
+    available: false
+  },
+  {
+    name: 'part9',
+    type: 'jut',
+    connectors: ['center'],
+    rotatable: false,
+    filename: '/part9.glb',
+    price: 48,
+    description: 'part9 description',
+    available: false
+  },
 ]
 
 
