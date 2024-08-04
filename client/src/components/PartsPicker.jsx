@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 
 import { Parts } from '../config/constants'
 
@@ -13,44 +13,78 @@ function PartsPicker({
   addToMap, 
   unDoAdd, 
   deleteLast, 
-  freeCons, 
 }) {
   
   const snap = useSnapshot( appState )
 
+  const freeCons = snap.freeCons.filter((freeCon) => freeCon.id>=0)
+
   const [ clicked, setClicked ] = useState('')
 
-  const getClickedIndexChanged = (arrow) => {
-    if (clicked != '') {
-      const partsAvailable = Parts.filter((part) => part.available == true)
-      if (partsAvailable && partsAvailable.length>1) {
-        const indexOfClicked = partsAvailable.indexOf(partsAvailable.filter((part) => part.name == clicked)[0])
-        if (arrow == 'right') {
-            if (indexOfClicked < (partsAvailable.length - 1)) {
-              setClicked(partsAvailable[indexOfClicked+1].name)
-            } else {
-              setClicked(partsAvailable[0].name)
-            }
-          } else if (arrow == 'left') {
-          if (indexOfClicked > 0) {
-            setClicked(partsAvailable[indexOfClicked-1].name)
-          } else {
-            setClicked(partsAvailable[partsAvailable.length-1].name)
-          }
-        }
-      }
-    }
+  if (freeCons[0] && snap.assemblyMap.length == 0) {
+    Object.keys(Parts).forEach(
+      (name) => Parts[name].type != 'base' ? Parts[name].available = true : Parts[name].available = false)
+  } else if (freeCons[0] && snap.assemblyMap.length !=0) {
+    Object.keys(Parts).forEach(
+      (name) => Parts[name].type == 'base' ? Parts[name].available=false : Parts[name].available = true)
+  } else if (!freeCons[0] && snap.assemblyMap.length !=0) {
+    Object.keys(Parts).forEach(
+      (name) => Parts[name].type == 'jumper' ? Parts[name].available=true : Parts[name].available = false)
+  } else {
+    Object.keys(Parts).forEach(
+      (name) => Parts[name].type == 'base' ? Parts[name].available = true : Parts[name].available = false)
   }
 
-  if (freeCons[0] && snap.assemblyMap.length == 0) {
-    Parts.forEach((part) => part.type != 'base' ? part.available = true : part.available = false)
-  } else if (freeCons[0] && snap.assemblyMap.length !=0) {
-    Parts.forEach((part) => part.type == 'base' ? part.available=false : part.available = true)
-  } else if (!freeCons[0] && snap.assemblyMap.length !=0) {
-    Parts.forEach((part) => part.type == 'jumper' ? part.available=true : part.available = false)
-  } else {
-    Parts.forEach((part) => part.type == 'base' ? part.available = true : part.available = false)
+  const partsAvailable = Object.keys(Parts).map(
+    (name) => Parts[name].available ? Parts[name] : 'unavailable'
+  )
+  
+  const getClickedIndexChanged = (arrow) => {
+    if (clicked != '') {
+      const indexOfClicked = Number(clicked.replace('part', '')) - 1
+      const clickedAvailable = Parts[clicked].available
+      console.log(clickedAvailable, indexOfClicked)
+      if (partsAvailable && partsAvailable.length>1 && clickedAvailable) {
+        if (arrow == 'right') {
+          if (indexOfClicked < (partsAvailable.length - 1)) {
+            for (let i = (indexOfClicked + 1); i <= (partsAvailable.length - 1); i++) {
+              if (partsAvailable[i] != 'unavailable') {
+                setClicked(partsAvailable[i].filename.split('.')[0].replace('/', ''))
+                return
+              }
+            }
+          }
+          setClicked(partsAvailable.filter(
+            (part) => part != 'unavailable'
+          )[0] ? partsAvailable.filter(
+            (part) => part != 'unavailable'
+          )[0].filename.split('.')[0].replace('/', '') : '')
+          return
+        } else if (arrow == 'left') {
+          if (indexOfClicked > 0) {
+            for (let i = (indexOfClicked - 1); i >= 0; i--) {
+              if (partsAvailable[i] != 'unavailable') {
+                setClicked(partsAvailable[i].filename.split('.')[0].replace('/', ''))
+                return
+              }
+            }
+          }
+          setClicked(partsAvailable.filter(
+            (part) => part != 'unavailable'
+          )[0] ? partsAvailable.filter(
+            (part) => part != 'unavailable'
+          )[0].filename.split('.')[0].replace('/', '') : '')
+        }
+      } else if (partsAvailable && partsAvailable.length>0) {
+        setClicked(partsAvailable.filter(
+          (part) => part != 'unavailable'
+        )[0] ? partsAvailable.filter(
+          (part) => part != 'unavailable'
+        )[0].filename.split('.')[0].replace('/', '') : '')
+      }
+    } 
   }
+
   return (
     <div
       className='partpicker-container'
@@ -58,8 +92,8 @@ function PartsPicker({
       <div className='flex flex-1 flex-wrap gap-1 min-h-10 max-h-20'>
         <p className='mt-2 text-gray-500 text-xs truncate'>
           {clicked === "" ? "No part selected" : 
-            `${Parts.filter((part => Object.values(part).indexOf(clicked)>-1))[0].description} price $
-            ${Parts.filter((part => Object.values(part).indexOf(clicked)>-1))[0].price}`
+            `${Parts[clicked].description} price $
+            ${Parts[clicked].price}`
           }
         </p>
       </div>

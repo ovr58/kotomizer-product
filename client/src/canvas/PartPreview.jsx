@@ -3,6 +3,7 @@ import { Float, Preload, useGLTF } from '@react-three/drei'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { CanvasLoader } from '../components'
 import { Parts } from '../config/constants'
+import { v4 as uuidv4 } from 'uuid'
 
 import {
   Selection,
@@ -12,7 +13,6 @@ import {
 } from '@react-three/postprocessing' // для выделения детали с которой хоти работать
 import { getPartSize } from '../config/helpers' // дистанция до камеры чтобы вся деталь вмещалась в поле камеры предпросмотра
 import Camerarig from './Camerarig'
-import { Vector3 } from 'three'
 import * as TWEEN from '@tweenjs/tween.js'
 
 
@@ -23,6 +23,7 @@ const Model = ({ nodes, setClicked, clicked, setDist, setTargetObj }) => {
   const setClickedPart = () => {
     let clickedPart = {}
     if (menuParts.current && menuParts.current.length > 0 && clicked !='') {
+      console.log(menuParts.current)
       clickedPart = menuParts.current.filter((part) => part.name == clicked)[0]
       const partSize = getPartSize(clickedPart)
       setTargetObj([clickedPart.position.x, clickedPart.position.y + partSize.y/2, clickedPart.position.z])
@@ -36,7 +37,6 @@ const Model = ({ nodes, setClicked, clicked, setDist, setTargetObj }) => {
       setClicked(clickedPart.name)
     }
     if (Object.keys(clickedPart)) {
-      console.log('dist')
       const maxSizeByZXofAll = Math.max(...getPartSize(clickedPart).toArray())
       const fovToRads = 25 * ( Math.PI / 180 )
       const dist = Math.abs( (maxSizeByZXofAll/2 ) / Math.tan( fovToRads / 2 ))
@@ -64,7 +64,7 @@ const Model = ({ nodes, setClicked, clicked, setDist, setTargetObj }) => {
             x: posX,
             y:-partSizeY/2,
             z: posZ
-          }, 1500
+          }, 1000
         ).easing(TWEEN.Easing.Cubic.Out).start().onComplete(() => {
           if (i == (count - 1)) {
             setClickedPart()
@@ -84,27 +84,28 @@ const Model = ({ nodes, setClicked, clicked, setDist, setTargetObj }) => {
   return (
     <group
       name={'catalogue'}
-      key={'catalogue'}
+      key={'catalogueMenu'}
       >
-      {Parts.map((part, i) => (
+      {Object.keys(Parts).map((name, i) => (
         <Select
-          key={`${part.name}/${i}`}
+          key={`${name}/${i}`}
           enabled={
-            hovered === part.name && part.available ||
-            clicked === part.name && part.available
+            hovered === name && Parts[name].available ||
+            clicked === name && Parts[name].available
           }
         >
         <Float speed={0.35} rotationIntensity={0.5} floatIntensity={0.1}>
           <group 
             ref = {(el) => (menuParts.current[i] = el)}
-            key={`${part.name}/${i}`}
-            name={part.name}
-            userData={{available: part.available}}
+            key={`${name}/${i}/group`}
+            name={name}
+            userData={{available: Parts[name].available}}
             castShadow 
             receiveShadow 
-            onPointerOver={() => setHover(part.available ? part.name : '')}
+            onPointerOver={() => setHover(Parts[name].available ? name : '')}
             onPointerOut={() => setHover('')}
-            onPointerDown={() => setClicked(part.available ? part.name : '')}
+            onPointerDown={() => setClicked(Parts[name].available ? name : '')}
+            dispose={null}
             >
               {Object.entries(nodes[i].nodes).filter((arr) => arr[0].includes('Detail')).map((subMesh) => (
                 <mesh 
@@ -113,7 +114,7 @@ const Model = ({ nodes, setClicked, clicked, setDist, setTargetObj }) => {
                 >
                   <meshStandardMaterial 
                     {...subMesh[1].material} 
-                    transparent={clicked != '' && !(part.name == clicked)} 
+                    transparent={clicked != '' && !(name == clicked)} 
                     opacity={0.2} />
                 </mesh>
               ))}
@@ -129,21 +130,19 @@ const PartPreview = ({ setClicked, clicked }) => {
 
   const [ dist, setDist ] = useState({})
 
-  const objects = useMemo(() => Parts.map((part) => useGLTF(`/${part.name}.glb`)))
+  const objects = useMemo(() => Object.keys(Parts).map((name) => useGLTF(`/${name}.glb`)))
 
   const [ targetObj, setTargetObj ] = useState([0, 0, 0])
 
   return (
     <Canvas
-      key = {dist.toString()}
       frameloop='demand'
       dpr={[1, 2]}
-      gl={{ preserveDrawingBuffer: false }}
+      gl={{ preserveDrawingBuffer: true }}
     >
-      <Suspense fallback={<CanvasLoader />}>
-      <Camerarig dist={dist} type={'menu'} targetObj={targetObj}/>
+      <Camerarig dist={dist} targetObj={targetObj}/>
       <ambientLight intensity={1.25} />
-      <directionalLight position={new Vector3(dist.dist, dist.height, dist.dist)} />
+      <directionalLight position={[dist.dist, dist.height, dist.dist]} />
         <Selection>
           <EffectComposer multisampling={10} autoClear={false}>
             <Outline
@@ -153,13 +152,12 @@ const PartPreview = ({ setClicked, clicked }) => {
             />
           </EffectComposer>
           <Model 
-                nodes = {objects}
-                setClicked={setClicked}
-                clicked = {clicked}
-                setDist = {setDist}
-                setTargetObj={setTargetObj} />
+            nodes = {objects}
+            setClicked={setClicked}
+            clicked = {clicked}
+            setDist = {setDist}
+            setTargetObj={setTargetObj} />
         </Selection>
-      </Suspense>
       <Preload all />
     </Canvas>
     );
@@ -167,6 +165,6 @@ const PartPreview = ({ setClicked, clicked }) => {
 
 export default PartPreview
 
-Parts.forEach((part) => {
-  useGLTF.preload(`/${part.name}.glb`)
+Object.keys(Parts).forEach((name) => {
+  useGLTF.preload(`/${name}.glb`)
 })

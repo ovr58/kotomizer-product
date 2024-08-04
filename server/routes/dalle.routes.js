@@ -1,6 +1,5 @@
 import express from 'express';
 
-import { DiffusionPipeline } from '@aislamov/diffusers.js'
 import fs from 'fs'
 import { PNG } from 'pngjs'
 

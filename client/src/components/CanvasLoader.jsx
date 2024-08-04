@@ -1,6 +1,9 @@
 import { Html, useProgress } from "@react-three/drei";
+import CustomButton from "./CustomButton";
 
-const CanvasLoader = () => {
+
+const CanvasLoader = ({ error, resetErrorBoundary }) => {
+  console.log('CanvasLoader - ', error)
   const { progress } = useProgress();
   return (
     <Html
@@ -13,17 +16,31 @@ const CanvasLoader = () => {
         flexDirection: "column",
       }}
     >
-      <span className='canvas-loader'></span>
-      <p
-        style={{
-          fontSize: 14,
-          color: "#F1F1F1",
-          fontWeight: 800,
-          marginTop: 40,
-        }}
-      >
-        {progress.toFixed(2)}%
-      </p>
+      {!error ? 
+        <div>
+          <span className='canvas-loader'>Loading...</span>
+          <p
+            style={{
+              fontSize: 14,
+              color: "#F1F1F1",
+              fontWeight: 800,
+              marginTop: 40,
+            }}
+          >
+            {progress.toFixed(2)}%
+          </p> 
+        </div>
+        : 
+        <div className='annotation'>
+          Что-то пошло не так...
+          <CustomButton 
+            type='filled'
+            title='Сбросить'
+            customStyles='text-red'
+            handleClick={resetErrorBoundary}
+          />
+        </div>
+      }
     </Html>
   );
 };

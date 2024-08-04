@@ -34,20 +34,27 @@ export const TransformTabs = [
   }
 ]
 
-export const DecalTypes = {
-  logo: {
-    stateProperty: "logoDecal",
-    filterTab: "logoShirt",
+export const FileOpsTypes = {
+  downloadCpi: {
+    stateProperty: "Save The Cat Post",
+    elementName: 'cpidata'
   },
-  full: {
-    stateProperty: "fullDecal",
-    filterTab: "stylishShirt",
+  uploadCpi: {
+    stateProperty: "Upload The Cat Post",
+    stateProp: 'assembledMap'
+  },
+  downloadPng: {
+    stateProperty: "Photo The Cat Post",
+    elementName: "mainCanvas",
+  },
+  uploadPng: {
+    stateProperty: "Set Background",
+    stateProp: 'backgroundImg'
   },
 };
 
-export const Parts = [
-  {
-    name: 'part1',
+export const Parts = {
+  part1: {
     type: 'base',
     connectors: ['con1out', 'con2out'],
     rotatable: false,
@@ -56,9 +63,8 @@ export const Parts = [
     description: 'part1 description',
     available: true
   },
-  {
-    name: 'part2',
-    type: 'perfo',
+  part2: {
+    type: 'column',
     connectors: ['con1out'],
     rotatable: false,
     filename: '/part2.glb',
@@ -66,9 +72,8 @@ export const Parts = [
     description: 'part2 description',
     available: false
   },
-  {
-    name: 'part3',
-    type: 'perfo',
+  part3: {
+    type: 'column',
     connectors: ['con1out'],
     rotatable: false,
     filename: '/part3.glb',
@@ -76,9 +81,8 @@ export const Parts = [
     description: 'part3 description',
     available: false
   },
-  {
-    name: 'part4',
-    type: 'perfo',
+  part4: {
+    type: 'column',
     connectors: ['con1out'],
     rotatable: false,
     filename: '/part4.glb',
@@ -86,8 +90,7 @@ export const Parts = [
     description: 'part4 description',
     available: false
   },
-  {
-    name: 'part5',
+  part5: {
     type: 'hause',
     connectors: ['con1out'],
     rotatable: true,
@@ -96,8 +99,7 @@ export const Parts = [
     description: 'part5 description',
     available: false
   },
-  {
-    name: 'part6',
+  part6: {
     type: 'jumper',
     connectors: [2.12],
     rotatable: true,
@@ -106,8 +108,7 @@ export const Parts = [
     description: 'part6 description',
     available: false
   },
-  {
-    name: 'part7',
+  part7: {
     type: 'head',
     connectors: ['con1out'],
     rotatable: true,
@@ -116,8 +117,7 @@ export const Parts = [
     description: 'part7 description',
     available: false
   },
-  {
-    name: 'part8',
+  part8: {
     type: 'head',
     connectors: ['con1out'],
     rotatable: true,
@@ -126,8 +126,7 @@ export const Parts = [
     description: 'part8 description',
     available: false
   },
-  {
-    name: 'part9',
+  part9: {
     type: 'jut',
     connectors: ['center'],
     rotatable: false,
@@ -136,7 +135,7 @@ export const Parts = [
     description: 'part9 description',
     available: false
   },
-]
+}
 
 
 export const alerts = {

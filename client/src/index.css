@@ -15,6 +15,16 @@ html {
   }
 }
 
+.annotation {
+  @apply text-left text-[#8c92a4] select-none px-[15px] py-2.5 rounded-[5px] before:content-[''] before:absolute before:left-[-30px] before:h-0.5 before:w-[30px] before:top-5;
+  transform: translate3d(calc(50%), calc(-50%), 0);
+  background: #181c20;
+  font-family: var(--leva-fonts-mono);
+}
+.annotation::before {
+  background: #181c20;
+}
+
 .app {
   @apply relative w-full h-screen overflow-hidden;
 }
@@ -56,7 +66,7 @@ html {
 }
 
 .filepicker-container {
-  @apply absolute left-full ml-3 glassmorphism p-3 w-[195px] h-[220px] flex flex-col rounded-md;
+  @apply select-none absolute left-full ml-3 glassmorphism p-3 w-[400px] h-[400px] rounded-md flex flex-col gap-4;
 }
 
 .filepicker-label {
@@ -93,4 +103,9 @@ input[type="file"] {
 
 .sketch-picker > div:nth-child(3) {
   display: none !important;
+}
+
+.canvas-loader {
+  @apply text-[10px] w-[1em] h-[1em] relative rounded-[50%];
+  transform: translateZ(0);
 }

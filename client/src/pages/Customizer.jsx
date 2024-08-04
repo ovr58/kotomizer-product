@@ -1,16 +1,11 @@
-import React, { Suspense, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 
 import { useSnapshot } from 'valtio'
 import appState from '../store'
 
-import config from '../config/config'
-import { Parts } from '../config/constants'
-
-import { download } from '../assets'
-
-import { reader } from '../config/helpers'
-import { EditorTabs,  DecalTypes, TransformTabs, alerts } from '../config/constants'
+import { downloadFile, reader } from '../config/helpers'
+import { EditorTabs, TransformTabs, FileOpsTypes, Parts, alerts } from '../config/constants'
 
 import { fadeAnimation, slideAnimation } from '../config/motion'
 
@@ -21,45 +16,23 @@ const Customizer = () => {
 
   const snap = useSnapshot(appState)
   // глубокое копирование карты сборки
-  const assemblyMap = JSON.parse(JSON.stringify(snap.assemblyMap)) 
-  // состояние для файла загрузки карты сборки
-  const [file, setFile] = useState('')
-// состояния для свободных коннекторов, номера свободного коннектора для перемещения на него
+  const assemblyMap = snap.assemblyMap
+  // свободных коннекторов, номера свободного коннектора для перемещения на него
+  const freeCons = snap.freeCons
+  // состояние для файла загрузки
+  const [file, setFile] = useState(null)
 // есть ли детали в сборке, есть ли свободные коннекторы, есть ли деталь с которой работаем
-  const [freeCons, setFreeCons] = useState(snap.freeCons)
-  const [conNumber, setConNumber] = useState(freeCons.length)
-  const [hasParts, setHasParts] = useState(Boolean(assemblyMap.length > 0))
-  const [hasFreeCons, setHasFreeCons] = useState(Boolean(freeCons[0]))
+  const [conNumber, setConNumber] = useState(0)
+  const hasFreeCons = Boolean(freeCons[0])
+  const hasParts = Boolean(assemblyMap.length > 0)
   const [hasNimbedPart, setHasNimbedPart] = useState(
     assemblyMap.length>1 ? Boolean(assemblyMap[assemblyMap.length-1].id < 0) : false)
-// устанавливаем все состояния при изменении глобальных состояний
-  useEffect(() => {
-    setFreeCons(snap.freeCons)
-  }, [snap.freeCons.toString()])
-
-  useEffect(() => {
-    setHasFreeCons(Boolean(freeCons[0]))
-  }, [freeCons.toString()])
-
-  useEffect(() => {
-    setHasParts(Boolean(assemblyMap.length > 0))
-  }, [assemblyMap.toString()])
-
-  useEffect(() => {
-    setHasNimbedPart(assemblyMap.length>1 ? Boolean(assemblyMap[assemblyMap.length-1].id < 0) : false)
-  }, [hasParts])
 // функция для получения свойства поворачиваемости из каталога деталей
   const isRotatable = (partName) => {
 
-    const nimbedPartName = hasNimbedPart ? assemblyMap[assemblyMap.length-1].name : partName
-
-    const isRotatable = Parts.filter((part) => part.name==nimbedPartName)[0].rotatable
+    const isRotatable = Parts[partName].rotatable
 
     return isRotatable
-  }
-// функция для получения типа детали из каталога деталей
-  const getPartType = (partName) => {
-    return Parts.filter((part) => part.name==partName)[0].type
   }
 // начальное состояние кнопок отменить, добавить и удалить палитры деталей
   const [partPickerButtonsStatus, setPartPickerButtonsStatus] = useState({
@@ -88,12 +61,12 @@ const Customizer = () => {
   const generateTabContent = () => {
     switch (activeEditorTab) {
       case "colorpicker":
-        return <ColorPicker /> // ЗАМЕНИТЬ НА ВЫБОР СКИНОВ ДЛЯ ДЕТАЛЕЙ
+        return <ColorPicker /> // 
       case "filepicker":
         return <FilePicker // вкладка загрузки готовых сборок
                   file={file}
                   setFile={setFile}
-                  readFile={readFile}
+                  handleDownLoad={handleDownLoad}
                 />
       case "partspicker":
         return <PartsPicker // вкладка палитры деталей
@@ -101,27 +74,38 @@ const Customizer = () => {
                   addToMap={addToMap}
                   unDoAdd={unDoAdd}
                   deleteLast={deleteLast}
-                  freeCons={freeCons.filter(freeCon => freeCon.id >= 0)} // отсевиваем свободные коннекторы с положительным id 
                />
       default:
         return null
     }
   }
-// функция для работы с скинами деталей ПОКА В РАЗРАБОТКЕ
-  const handleDecals = (type, result) => {
-    const decalType = DecalTypes[type]
-
-    appState[decalType.stateProperty] = result
+  const handleDownLoad = (opType, file) => {
+    switch (opType) {
+      case "Save The Cat Post":
+        const date = new Date()
+        downloadFile(`${date.toString().replace(/[' ':GMT+.*$]/g, "")}catpost`, JSON.stringify(assemblyMap))
+        break
+      case "Upload The Cat Post":
+        readFile(file)
+        break
+      case "Photo The Cat Post":
+        downloadFile('mainCanvas')
+        break
+      case "Set Background":
+        readFile(file)
+        break
+      default:
+        return
+    }
   }
 // функция обработки нажатий на кнопки трансформаций
-  const handleActiveTransformTab = (tabName, value=0, intersectedState, freeCons) => {
-    console.log(intersectedState, 'from handleActiveTransformTab')
+  const handleActiveTransformTab = (tabName, value=0) => {
     switch (tabName) {
       case "changePosition":
         setNewPosition(freeCons)
         break
       case "place":
-        placeDetail(intersectedState)
+        placeDetail()
         break
       case "rotate":
         rotateDetail(value)
@@ -131,12 +115,22 @@ const Customizer = () => {
     }
   }
 // функция чтения файла ПОКА В РАЗРАБОТКЕ
-  const readFile = (type) => {
-    reader(file)
-    .then((result) => {
-      handleDecals(type, result)
-      setActiveEditorTab("")
-    })
+  const readFile = (file) => {
+    try {
+      reader(file).then((result) => {
+        if (file.type == 'image/jpeg') {
+          appState.background = result
+        } else {
+          appState.assemblyMap = JSON.parse(result)
+        }
+      }).catch((error) => {
+        console.log(error.message)
+      })
+    } catch (error) {
+      console.log(error.message)
+    }
+    setFile(null)
+    setActiveEditorTab('')
   }
 // функция обработки нажатия на копку добавить в палитре деталей
   const addToMap = (part) => {
@@ -147,12 +141,13 @@ const Customizer = () => {
       alert(alerts.cantAdd.ru)
       return
     }
+
 // получим индекс добавляемой детали в карте сборки
     const partIndex = assemblyMap.length
 // получим первый свободный коннектор
     const firstFreeCon = snap.freeCons[0]
 // определеим тип детали
-    const partType = getPartType(part)
+    const partType = Parts[part].type
 // изменим статус кнопок вкладки до начала работы с деталью
     setPartPickerButtonsStatus({
       undoButton: true,
@@ -179,7 +174,8 @@ const Customizer = () => {
                           connector: {name: firstFreeCon.conName}
           }],
           position: [0, 0, 0],
-          rotation: [0, 0, 0]
+          rotation: [0, 0, 0],
+          material: {}
         })
       } else {
         // добавим запись о джампере
@@ -199,7 +195,8 @@ const Customizer = () => {
           position: [0, 0, 0],
           rotation: [0, 0, 0],
           scale: [1, 1, 1],
-          maxScale: 1
+          maxScale: 1,
+          material: {}
           } )
         }
       // изменим статусы так чтобы вкладка не мешала редактированию и статус наличия детали с которой работаем
@@ -214,7 +211,8 @@ const Customizer = () => {
         name: part,
         connectedTo: [],
         position: [0, 0, 0],
-        rotation: [0, 0, 0]
+        rotation: [0, 0, 0],
+        material: {}
       })
       setPartPickerButtonsStatus({
         undoButton: false,
@@ -228,7 +226,6 @@ const Customizer = () => {
       })
       setHasNimbedPart(false)
     }
-    setHasParts(true)
   }
 
   const unDoAdd = () => {
@@ -250,7 +247,6 @@ const Customizer = () => {
       place: false,
       rotate:false
     })
-
     appState.assemblyMap.pop() // удаляем последний элемент карты сборки
     // если последняя деталь которая осталась с нулевым индексом - меняем статус кнопок
     assemblyMap.length - 1 == 0 && setPartPickerButtonsStatus({
@@ -268,21 +264,21 @@ const Customizer = () => {
       alert(alerts.cantDeleteLast.ru)
       return
     }
-
     appState.assemblyMap.pop()
     // если последняя деталь которая осталась с нулевым индексом - меняем статус кнопок
     assemblyMap.length - 1 == 0 && setPartPickerButtonsStatus({
-      addButton: true,
+      addButton: false,
       undoButton: false,
       deleteLastButton: false
     })
 
   }
 
-  const setNewPosition = (freeCons) => {
+  const setNewPosition = () => {
+  
 // функция установки детали с которой работаем на сборку в новой позиции (при нажатии кнопки перемещения на вкладке трансформации)
 // отсеим свободные коннекторы с отрицательным индексом то есть те которые относятся к детали с которой работаем
-    freeCons = freeCons.filter(freeCon => freeCon.id >= 0)
+    let freeConsToPlace = freeCons.filter(freeCon => freeCon.id >= 0)
 // индекс детали с которой работаем в карте сборки
     const index = assemblyMap.length-1
     if (hasNimbedPart && assemblyMap[index].type == 'jumper') {
@@ -316,29 +312,66 @@ const Customizer = () => {
     // если работаем с другой деталью не с джампером
     if (hasNimbedPart && freeCons[0]) {
       // если номер свободного коннектора больше последнего из всех свободных коннекторов то назначим первый из свободных
-      if (conNumber > freeCons.length - 1) {
-        setConNumber(0)
-        return
+      let countIndex = conNumber
+      const conConnectedToCurrentName = snap.assemblyMap[assemblyMap.length - 1].connectedTo[0].connector.name
+      const conConnectedToCurrentId = snap.assemblyMap[assemblyMap.length - 1].connectedTo[0].id
+      const indexInFreeCons = freeConsToPlace.indexOf(
+        freeConsToPlace.filter(
+          (freeCon) => 
+            freeCon.conName == conConnectedToCurrentName && freeCon.id == conConnectedToCurrentId)[0])
+      // в объекте детали в карте сборке присвоим новый коннектор
+      if (indexInFreeCons == countIndex && (countIndex + 1) <= (freeCons.length - 1)) {
+        countIndex ++
+      } else if (indexInFreeCons == conNumber && (conNumber + 1) > (freeCons.length - 1)) {
+        countIndex = 0
       }
-      // в объекте детали в карте сборке присвоим новый коннектор 
       appState.assemblyMap[assemblyMap.length-1].connectedTo = [{
-        id: freeCons[conNumber].id,
-        connector: {name: freeCons[conNumber].conName}
+        id: freeCons[countIndex].id,
+        connector: {name: freeCons[countIndex].conName}
       }]
       // если этот коннектор последний то назначим номер нулем иначе следующим номером свободного коннектора
-      conNumber + 1 > freeCons.length - 1 ? setConNumber(0) : setConNumber(conIndex + 1) 
+      countIndex + 1 > freeConsToPlace.length - 1 ? setConNumber(0) : setConNumber(conNumber + 1) 
     } else {
       alert(alerts.onlyOnePositionsAvalable.ru)
     }
 
   }
 
-  const placeDetail = (intersectedState) => {
+  const placeDetail = () => {
     
+    const intersectedState = snap.intersected
+
     if (hasNimbedPart) {
-      console.log(snap.intersected, intersectedState)
-      if (intersectedState.filter(state => state).length<2) {
-        appState.assemblyMap[assemblyMap.length-1].id = -appState.assemblyMap[assemblyMap.length-1].id
+      const trueIntersections = intersectedState.filter((state) => state[2])
+      const placedDetail = appState.assemblyMap[assemblyMap.length-1]
+      if (trueIntersections.length<2) {
+        placedDetail.id = -placedDetail.id
+        setHasNimbedPart(false)
+      } else if (
+        trueIntersections.length == 2 &&  
+        trueIntersections[0][0].includes('column') &&
+        trueIntersections[1][0].includes('column') && 
+        trueIntersections[0][1].includes('hause') &&
+        trueIntersections[1][1].includes('hause')
+      ) {
+        placedDetail.id = -placedDetail.id
+        setHasNimbedPart(false)
+      } else if (
+        trueIntersections.length == 2 && 
+        placedDetail.type == 'jumper'
+      ) {
+        placedDetail.id = -placedDetail.id
+        setHasNimbedPart(false)
+      }  else if (
+        trueIntersections.length == 3 && 
+        placedDetail.type == 'jumper' &&
+        trueIntersections.reduce(
+          (accum, val) => 
+            accum += val.filter(
+              (name) => name.toString().includes('hause')
+            ).length, 0) == 2
+      ) {
+        placedDetail.id = -placedDetail.id
         setHasNimbedPart(false)
       } else {
         alert(alerts.intersectionDetected.ru)
@@ -364,7 +397,7 @@ const Customizer = () => {
 
     if (hasNimbedPart) {
 
-      if (isRotatable()) {
+      if (isRotatable(assemblyMap[assemblyMap.length-1].name)) {
         if (assemblyMap[assemblyMap.length-1].type == 'jumper') {
           const maxScale = assemblyMap[assemblyMap.length-1].maxScale
           appState.assemblyMap[assemblyMap.length-1].scale[0] = (value/360)*(maxScale-0.2) + 0.2
@@ -380,59 +413,55 @@ const Customizer = () => {
   }
 
   return (
-    <AnimatePresence>
-      {!snap.intro && (
-        <>
-          <motion.div
-            key='custom'
-            className='absolute top-0 left-0 z-10'
-            {...slideAnimation('left')}
-          >
-            <div className='flex items-center min-h-screen'>
-              <div className='editortabs-container tabs'>
-                {EditorTabs.map((tab) => (
-                  <Tab 
-                    key={tab.name}
-                    tab={tab}
-                    isActive={activeEditorTab === tab.name}
-                    handleClick = {()=>setActiveEditorTab(tab.name === activeEditorTab ? "" : tab.name)}
-                  />
-                ))}
-                <Suspense>
-                  {generateTabContent()}
-                </Suspense>
-              </div>
-            </div>
-          </motion.div>
+    <AnimatePresence key = {'customizerPage'}>
+      <motion.div
+        key='customTabContent'
+        className='absolute top-0 left-0 z-10'
+        {...slideAnimation('left')}
+      >
+        <div className='flex items-center min-h-screen'>
+          <div className='editortabs-container tabs'>
+            {EditorTabs.map((tab,i) => (
+              <Tab 
+                key={`${tab.name}/${i}`}
+                tab={tab}
+                isActive={activeEditorTab === tab.name}
+                handleClick = {()=>setActiveEditorTab(tab.name === activeEditorTab ? "" : tab.name)}
+              />
+            ))}
+            {generateTabContent()}
+          </div>
+        </div>
+      </motion.div>
 
-          <motion.div
-            className='absolute z-10 top-5 right-5'
-            {...fadeAnimation}
-          >
-            <CustomButton 
-              type='filled'
-              title='Go Back'
-              handleClick={() => appState.intro = true}
-              customStyles='w-fit px-4 py-2.5 font-bold text-sm'
-            />
-          </motion.div>
+      <motion.div
+        key='customButtons'
+        className='absolute z-10 top-5 right-5'
+        {...fadeAnimation}
+      >
+        <CustomButton 
+          type='filled'
+          title='Go Back'
+          handleClick={() => appState.intro = true}
+          customStyles='w-fit px-4 py-2.5 font-bold text-sm'
+        />
+      </motion.div>
 
-          <motion.div
-            className='filtertabs-container'
-            {...slideAnimation('up')}
-          >
-            {TransformTabs.map((tab) => (
-                  <Tab 
-                    key={tab.name}
-                    tab={tab}
-                    isActive = {activeTransformTab[tab.name]}
-                    isTransformTab
-                    handleClick = {(value, intersectedState, freeCons)=> handleActiveTransformTab(tab.name, value, intersectedState, freeCons)}
-                  />
-                ))}
-          </motion.div>
-        </>
-      )}
+      <motion.div
+        key='customTransformTabs'
+        className='filtertabs-container'
+        {...slideAnimation('up')}
+      >
+        {TransformTabs.map((tab, i) => (
+              <Tab 
+                key={`${tab.name}/${i}`}
+                tab={tab}
+                isActive = {activeTransformTab[tab.name]}
+                isTransformTab
+                handleClick = {(value)=> handleActiveTransformTab(tab.name, value)}
+              />
+            ))}
+      </motion.div>
     </AnimatePresence>
   )
 }

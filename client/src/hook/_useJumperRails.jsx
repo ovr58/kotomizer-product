@@ -22,8 +22,8 @@ export const useJumperRails = (obj) => {
     const getAllVertexesSortedByY = (obj) => {
         
         const pointVector = new THREE.Vector3()
-
-        const jumperableParts = Parts.filter((part) => !'jumperperfo'.includes(part.type)).map(
+// переделали Parts из массива в объект - ниже все НЕ ИЗМЕНЕНО
+        const jumperableParts = Parts.filter((part) => !'jumpercolumn'.includes(part.type)).map(
             (part) => part.name
         )
         
@@ -33,7 +33,6 @@ export const useJumperRails = (obj) => {
             (object) => jumperableParts.toString().includes(object.name.split('-')[0])
         )
         let vertexesByMeshesArray = {}
-console.log(allMeshesExeptPlaced)
         for (let mesh of allMeshesExeptPlaced) {
             let vertexArray = []
             let geometry = mesh.geometry
@@ -106,7 +105,6 @@ console.log(allMeshesExeptPlaced)
         
         // pointsToMoveAlong = getByDistance(pointsToMoveAlong, objSize.y)
 
-        console.log(pointsToMoveAlong)
 
         return pointsToMoveAlong
     }
@@ -152,7 +150,6 @@ console.log(allMeshesExeptPlaced)
             for (let j = i + 1; j < vertexesArray.length; j++) {
                 let distanceToPoint = parseFloat(vertexesArray[i].distanceTo(vertexesArray[j]).toFixed(2))
                 let distanceToControl = parseFloat(distance.toFixed(2))
-                console.log(distanceToControl, distanceToPoint)
                 if (
                     distanceToPoint <= distanceToControl*1.05 &&
                     distanceToPoint >= distanceToControl*0.95 &&
@@ -181,7 +178,6 @@ console.log(allMeshesExeptPlaced)
 //         ).reduce(
 //             (prev, cur, _i, _a) => [...prev, ...cur]
 //         ).filter((level, _i, a) => {
-//             // console.log(level, a.map(p => Number(level) - Number(p)))
 //             return a.some((l) => Math.abs((Number(level) - Number(l))) >= (objSize.y*0.95) &&
 //                                  Math.abs((Number(level) - Number(l))) <= (objSize.y*1.05)) // отсортировали те между которыми плюс минус 5% длины джампера
 //         })
@@ -212,7 +208,6 @@ console.log(allMeshesExeptPlaced)
 
 // const centerOfMass = new THREE.Vector3() сортировка по часовой
             
-// console.log('not clockwise', vertexesForThisMesh)
 
 // for (let i = 0; i < Object.values(vertexesForThisMesh).length; i++) {
 
@@ -232,7 +227,6 @@ console.log(allMeshesExeptPlaced)
 
 // }
 
-// console.log('sorted', vertexesForThisMesh)
 
     return () => {
         if (obj.current) {

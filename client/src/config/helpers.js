@@ -1,24 +1,52 @@
-import { Vector3, Box3 } from "three";
-import * as THREE from 'three'
+import { Vector3, Box3 } from "three"
 
-export const downloadCanvasToImage = () => {
-  const canvas = document.querySelector("canvas");
-  const dataURL = canvas.toDataURL();
-  const link = document.createElement("a");
-
-  link.href = dataURL;
-  link.download = "canvas.png";
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-};
+export const downloadFile = (elementName, cpiData) => {
+  const link = document.createElement("a")
+  if (elementName == 'mainCanvas') {
+    const element = document.querySelector(`.${elementName} canvas`)
+    const dataURL = element.toDataURL()
+    link.href = dataURL
+    link.download = `${elementName}.png`
+  } else {
+    const blob = new Blob([cpiData], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    link.href = url
+    link.download = `${elementName}.cpi`
+  }
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
 
 export const reader = (file) =>
   new Promise((resolve, reject) => {
-    const fileReader = new FileReader();
-    fileReader.onload = () => resolve(fileReader.result);
-    fileReader.readAsDataURL(file);
-  });
+    const fileReader = new FileReader()
+    fileReader.onload = () => resolve(fileReader.result)
+    fileReader.onerror = () => reject(error)
+    if (file.type == 'image/jpeg') {
+      fileReader.readAsDataURL(file)
+    } else {
+      fileReader.readAsText(file)
+    }
+  })
+  
+
+export const getAllMaterials = () => {
+  const materialList = []
+  const files = import.meta.glob('/public/materials/**/*.*')
+  const fileList = Object.keys(files).map((filename) => filename.replace('/public/materials/', ''))
+  const materialsList = [...new Set(fileList.map((file) => file.split('/')[0]))]
+  materialsList.forEach((materialName) => {
+    const materialObj = {
+      map: `materials/${materialName}/basecolor.jpg`,
+      normalMap: `materials/${materialName}/normal.jpg`,
+      roughnessMap: `materials/${materialName}/roughness.jpg`,
+      aoMap: `materials/${materialName}/AO.jpg`
+    }
+    materialList.push(materialObj)
+  })
+  return materialList
+}
 
 export const getContrastingColor = (color) => {
   // Remove the '#' character if it exists
@@ -35,43 +63,6 @@ export const getContrastingColor = (color) => {
   // Return black or white depending on the brightness
   return brightness > 128 ? "black" : "white";
 };
-
-// считаем высоту модели в карте сборки
-export const getHeight = (scene, assemblyMap) => {
-
-  const box = new THREE.Box3()
-
-  const objSize = new THREE.Vector3()
-
-  box.getSize(objSize)
-  let assembledHeightArray = [] //переменная для всех высот одного уровня
-//идем по всем инструкциям карты сборки
-  for (let instruction of assemblyMap) {
-//если тип детали не jumper
-    if (instruction.type != 'jumper') {
-      let partId = instruction.id
-      let bb = box.copy().setFromObject(parts[Number(instruction.name.replace('part', '')) - 1].nodes.Detail1) 
-      console.log(bb)
-      let partHeight = parts[Number(instruction.name.replace('part', '')) - 1].nodes.Detail1.scale.y
-      if (partId === 0) {
-        assembledHeightArray.push({id: partId, to: '', height: partHeight})
-      } else {
-        for (let isConncectedTo of instruction.connectedTo) {
-          let objExist = assembledHeightArray.find(obj => obj.to === isConncectedTo.id)
-          if (objExist) {
-            assembledHeightArray[assembledHeightArray.indexOf(objExist)].height = Math.max(objExist.height, partHeight)
-          } else {
-            assembledHeightArray.push({id: partId, to: isConncectedTo.id, height: partHeight})
-          }
-          }
-      }
-    }
-  }
-  
-  const result = assembledHeightArray.reduce((accum, cur) => accum = accum + cur.height, 0)
-
-  return result
-}
 
 
 // считаем дистанцию удаления камеры и поднять камеру на сколько с припуском и в зависимости от fov
@@ -102,33 +93,43 @@ export const positions = (assemblyMap, parts) => {
   
       if (instruction.type != 'jumper') {
   
-        let conNames = Object.keys(parts[partId].userData).filter(conName => conName.includes('con'))
+        let conNames = parts[partId].userData.consNames
         if (conNames.length > 0) {
-          for (let conName of conNames) {
+          let vertexCoord = parts[partId].userData.objectCons.getAttribute('position')
+          let nameIndex = 0
+          for (let coordIndex = 0; coordIndex < vertexCoord.count; coordIndex+=1) {
+            let vertexVector = new Vector3()
+            vertexVector.fromBufferAttribute(vertexCoord, coordIndex)
             freeCons.push({
               id: instruction.id,
-              conName: conName,
-              position: parts[partId].userData[conName].position
+              conName: parts[partId].userData.consNames[nameIndex],
+              position: vertexVector.toArray()
             })
+            nameIndex ++ 
           }
         }
   
         if (partId === 0) {
           positionClone = [0, 0, 0]
         } else {
-          for (let conToPart of instruction.connectedTo) {
-            let fixVector = []
-            fixVector = assemblyMap[conToPart.id].position
-            let xOfBase = parts[conToPart.id].userData[conToPart.connector.name].position.x 
-            let yOfBase = parts[conToPart.id].userData[conToPart.connector.name].position.y
-            let zOfBase = parts[conToPart.id].userData[conToPart.connector.name].position.z
+          for (let conToPartIndex = 0; conToPartIndex < instruction.connectedTo.length; conToPartIndex++) {
+            let conToPart = instruction.connectedTo[conToPartIndex]
+            let conToPartId = conToPart.id
+            let fixVector = assemblyMap[conToPartId].position
+            let conName = conToPart.connector.name
+            let conPosition = freeCons.filter((freeCon) => (freeCon.id == conToPartId && freeCon.conName == conName))[0].position
+            let xOfBase = conPosition[0]
+            let yOfBase = conPosition[1]
+            let zOfBase = conPosition[2]
             positionClone[0] = xOfBase + fixVector[0]
             positionClone[1] = yOfBase + fixVector[1]
             positionClone[2] = zOfBase + fixVector[2]
-            freeCons = freeCons.filter(
-              (freeCon) => !(conToPart.id == freeCon.id &&
-              conToPart.connector.name == freeCon.conName)
-            )
+            if (instruction.id >= 0) {
+              freeCons = freeCons.filter(
+                (freeCon) => !(conToPart.id == freeCon.id &&
+                conToPart.connector.name == freeCon.conName)
+              )
+            }
           }
         }
       } else {
@@ -136,6 +137,7 @@ export const positions = (assemblyMap, parts) => {
         positionClone[1] = instruction.position[1]
         positionClone[2] = instruction.position[2]
       }
+        freeCons = [...freeCons]
         assemblyMap[partId].position = positionClone
     }
   }
@@ -164,14 +166,16 @@ export const isAtPlaces = (assemblyMap, parts) => {
     partObje.type = part.type
     partObje.position = part.position.toArray()
     partObje.rotation = part.rotation.toArray()
-    partObje.rotation.pop()
     partsCopied.push(partObje)
+  })
+  
+  partsCopied.forEach((part) => {
+    part.rotation.includes('XYZ') && part.rotation.pop()
   })
 
   const print1 = assemblyMap.reduce((acum, posAndRot) => 
-    acum = [...acum, ...posAndRot.position, ...posAndRot.rotation], []).toString()
+    acum = [...acum, ...posAndRot.position, ...posAndRot.rotation], []).filter((str) => str !== 'XYZ').toString()
   const print2 = partsCopied.reduce((acum, posAndRot) => 
     acum = [...acum, ...posAndRot.position, ...posAndRot.rotation], []).toString()
-  
   return print1 == print2
 }

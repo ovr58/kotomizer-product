@@ -33,12 +33,8 @@ export const useBoundingBox = (obj) => {
             let a = []
             let allMeshesExeptChecked = allMeshes.filter((object) => 
                         object.name != 'placedDetail' && object.name != 'hitbox')
-            console.log(allMeshes)
             for (let meshIndex = 0; meshIndex < allMeshesExeptChecked.length; meshIndex++) {
                 if (!printed.indexOf(meshIndex)>=0) {
-                    console.log(
-                        meshIndex, allMeshesExeptChecked[meshIndex].userData.obb, 
-                        allMeshesExeptChecked[meshIndex])
                     setPrinted([...printed, meshIndex])
                 }
                 a.push(allMeshesExeptChecked[meshIndex].userData.obb)

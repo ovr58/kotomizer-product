@@ -11,7 +11,7 @@ const Tab = ({ tab, isActive, isTransformTab, handleClick }) => {
   
   useEffect(() => {
     if (isActive && tab.name === 'rotate') {
-      handleClick(value, appState.intersected, appState.freeCons)
+      handleClick(value)
     } 
   }, [value])
 
@@ -31,7 +31,7 @@ const Tab = ({ tab, isActive, isTransformTab, handleClick }) => {
         <div 
           key={tab.name} 
           className={`tab-btn rounded-full glassmorphism rounded-4 ${isActive ? 'opacity-100': isTransformTab ? 'opacity-50 pointer-events-none' : 'opacity-50'}`}
-          onClick={() => handleClick(value, appState.intersected, appState.freeCons)}
+          onClick={() => handleClick(value)}
           style={activeStyles}
         >
           <img 

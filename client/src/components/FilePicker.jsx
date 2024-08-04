@@ -3,9 +3,10 @@ import React from 'react'
 import PropTypes from 'prop-types'
 
 import CustomButton from './CustomButton'
+import { FilePreview } from '../canvas'
 
-const FilePicker = ({ file, setFile, readFile }) => {
-
+const FilePicker = ({ file, setFile, handleDownLoad }) => {
+  console.log('FILEPICKER RENDERED')
   return (
     <div
       className='filepicker-container'
@@ -14,7 +15,7 @@ const FilePicker = ({ file, setFile, readFile }) => {
         <input 
           id='file-upload'
           type='file'
-          accept='image/*'
+          accept='.cpi,image/*'
           onChange={(e) => setFile(e.target.files[0])}
         />
         <label
@@ -23,22 +24,37 @@ const FilePicker = ({ file, setFile, readFile }) => {
           Upload File
         </label>
 
-        <p className='mt-2 text-gray-500 text-xs truncate'>
-          {file === "" ? "No file selected" : file.name}
-        </p>
+        <p>{file ? file.name : "No file selected"}</p>
       </div>
+      
+      {file &&
+       <FilePreview file={file} setFile={setFile}/>
+      }
 
       <div className='mt-4 flex flex-wrap gap-3'>
         <CustomButton 
-          type="outline"
-          title="Logo"
-          handleClick={() => readFile('logo')}
+          type={file && file.type != 'image/jpeg' ? "filled" : "blocked"}
+          title="Upload The Model"
+          handleClick={() => handleDownLoad('Upload The Cat Post', file)}
+          customStyles='text-xs'
+        />
+        <CustomButton 
+          type={file && file.type == 'image/jpeg' ? "filled" : "blocked"}
+          title="Set The Background"
+          handleClick={() => handleDownLoad('Set Background', file)}
+          customStyles='text-xs'
+          // добавить подсказки
+        />
+        <CustomButton 
+          type="filled"
+          title="Save The Cat Post"
+          handleClick={() => handleDownLoad('Save The Cat Post')}
           customStyles='text-xs'
         />
         <CustomButton 
           type="filled"
-          title="Full"
-          handleClick={() => readFile('full')}
+          title="Photo The Cat Post"
+          handleClick={() => handleDownLoad('Photo The Cat Post')}
           customStyles='text-xs'
         />
       </div>
@@ -49,7 +65,7 @@ const FilePicker = ({ file, setFile, readFile }) => {
 export default FilePicker
 
 FilePicker.propTypes = {
-  file: PropTypes.string,
+  file: PropTypes.object,
   setFile: PropTypes.func,
   readFile: PropTypes.func,
 }
