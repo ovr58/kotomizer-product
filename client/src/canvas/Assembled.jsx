@@ -13,10 +13,10 @@ import { Line } from '@react-three/drei'
 import { useThree } from '@react-three/fiber'
 // каталог деталей
 
-import { useTextures } from '../contexts/TextureContext';
 import { useAssembled } from '../contexts/AssembledContext';
 import MaterialChanger from '../components/MaterialChanger'
 import Backdrop from './Backdrop'
+import HelpersBoxes from '../components/HelperBoxes'
 
 
 const Assembled = () => {
@@ -31,32 +31,34 @@ const Assembled = () => {
   const lines = useRef([])
   // возвращаем массивы объектов и материалов для каждой инструкции в карте сборки
   const assembledObj = useAssembled()
-  const textures = useTextures()
   const { scene, camera } = useThree() // получили состояние сцены и камеры
   const highLightLine = useRef()
   // состояния точек ребер для подсветки места и установки джампера
   const [pointsArray, setPointsArray] = useState([])
   const [hlinePoints, setHlinePoints] = useState([])
   const [objectToChange, setObjectToChange] = useState({name: null, position: [0,0,0], textureCurrent: null})
-  
-  console.log('rerender Assembled MAIN - ', groupAssembled, details)
+  const [helpersBoxes, setHelpersBoxes] = useState([])
 
+  console.log('rerender Assembled MAIN - ', groupAssembled, details)
+  
 const findIntersections = () => {
-// поиск наложений (постоянного оверлапа) объектов в сцене
-let intersections = [] // будем возвращать массив с объектами с информацией о пересечении
-placedDetail.current[0] && placedDetail.current.forEach((detail) => {
-  if (detail) {
-    const placedDetailBBCenter = new THREE.Vector3()
-    detail.geometry.computeBoundingBox() // вычисляем актуальный бокс для геометрии объекта с которым работаем
-    detail.geometry.userData.obb.fromBox3(
-      detail.geometry.boundingBox // обновляем OBB в геометрии из этой коробки 
-    )
-    detail.geometry.boundingBox.getCenter(placedDetailBBCenter)
-    detail.userData.obb.copy(detail.geometry.userData.obb)
-    detail.userData.obb.applyMatrix4(detail.matrixWorld)
-    detail.localToWorld(placedDetailBBCenter)
-    detail.userData.obb.center.copy(placedDetailBBCenter)
-  }
+    // поиск наложений (постоянного оверлапа) объектов в сцене
+  const helpersBoxesArray = []
+  let intersections = [] // будем возвращать массив с объектами с информацией о пересечении
+  placedDetail.current[0] && placedDetail.current.forEach((detail) => {
+    if (detail) {
+      const placedDetailBBCenter = new THREE.Vector3()
+      detail.geometry.computeBoundingBox() // вычисляем актуальный бокс для геометрии объекта с которым работаем
+      detail.geometry.userData.obb.fromBox3(
+        detail.geometry.boundingBox // обновляем OBB в геометрии из этой коробки 
+      )
+      detail.geometry.boundingBox.getCenter(placedDetailBBCenter)
+      detail.userData.obb.copy(detail.geometry.userData.obb)
+      detail.userData.obb.applyMatrix4(detail.matrixWorld)
+      detail.localToWorld(placedDetailBBCenter)
+      detail.userData.obb.center.copy(placedDetailBBCenter)
+      helpersBoxesArray.push(detail.userData.obb)
+    }
   })
   // // помещаем независимый OBB в данные mesh
   // // применяем матрицы глобальных изменений данного объекта к ориентированной коробке
@@ -64,6 +66,7 @@ placedDetail.current[0] && placedDetail.current.forEach((detail) => {
   details.current.forEach((detail) => {
     if (detail) {
       if (detail.type == 'Mesh') { // нужны только mesh
+        console.log('SET FOR MESH')
         const detailBBCeneter = new THREE.Vector3()
         detail.geometry.computeBoundingBox()
         detail.geometry.userData.obb.fromBox3(
@@ -75,17 +78,23 @@ placedDetail.current[0] && placedDetail.current.forEach((detail) => {
         detail.localToWorld(detailBBCeneter)
         detail.userData.obb.center.copy(detailBBCeneter)
         
+        helpersBoxesArray.push(detail.userData.obb)
+        
         // пишем результат в массив
         if (placedDetail.current[0]) {
           intersections.push([
             placedDetail.current[0].parent.name, detail.parent.name, 
-            placedDetail.current.map((detailToCheck) => detail.userData.obb.intersectsOBB(detailToCheck.userData.obb)).includes(true)
+            placedDetail.current.map(
+              (detailToCheck) => 
+                detailToCheck && detail.userData.obb.intersectsOBB(detailToCheck.userData.obb)
+            ).includes(true)
           ])
         }
       }
     }
   })
-
+  setHelpersBoxes(helpersBoxesArray)
+  console.log(helpersBoxesArray)
   return intersections
 }
 
@@ -390,6 +399,7 @@ useEffect(() => {
 
   const sceneDetails = groupAssembled.current
   if (sceneDetails) {
+    console.log('SET INTERSECTIONS')
     appState.distanceToCamera = getDistance(sceneDetails)
     appState.freeCons = assembledObj.freeCons
     const intersected = findIntersections()
@@ -405,14 +415,14 @@ useEffect(() => {
         name={objectToChange.name}
         textureCurrent = {objectToChange.textureCurrent}
         textureDefault = {objectToChange.textureDefault}
-        textures = {textures}
+        textures = {assembledObj.setObjectArray.textures}
         size={getPartSize(groupAssembled.current)}
         setObjectState={setObjectToChange}
       /> 
       }
       <group
         ref={groupAssembled}
-        key={uuidv4()}
+        key={assembledObj.stateString}
         name={'groupAssembled'}
       >
         {assembledObj.assemblyMap.map((instruction, i) => {
@@ -423,14 +433,13 @@ useEffect(() => {
               position={instruction.position}
               rotation={instruction.rotation}
               scale={instruction.scale ? instruction.scale : [1,1,1]}
-              userData={assembledObj.setObjectArray.userDataArray[i]}
               castShadow 
               receiveShadow
             >
               {assembledObj.setObjectArray.objectGeometryArray[i].map((detailOfGroup, iOfDetail) => (
                 <mesh
                   ref={instruction.id<0 ? ((el) => (placedDetail.current[iOfDetail] = el)) : ((el) => (details.current[Number(`${i}${iOfDetail}`)] = el))} //если id отрицательный - назначаем ссылку 
-                  key={`${Math.abs(instruction.id)}/${iOfDetail}`}
+                  key={`${instruction.id}/${iOfDetail}`}
                   name={`${i}/${iOfDetail}/${instruction.type}`}
                   castShadow 
                   receiveShadow 
@@ -450,7 +459,7 @@ useEffect(() => {
                         name: e.object.name,
                         position: e.object.userData.obb.center.toArray(),
                         textureCurrent: e.object.material.name,
-                        textureDefault: assembledObj.setObjectArray.objectMaterialArray[i][iOfDetail]
+                        textureDefault: assembledObj.setObjectArray.objectMaterialArray[i][iOfDetail],
                       }), appState.camRotation = false, console.log('Obeject set - rotation to false set')
                     ))}
                 >
@@ -464,52 +473,8 @@ useEffect(() => {
               ))}
             </group>
     )})}
-        
-        {details.current[0] && details.current.map((detail, i) => {
-          if (detail) {
-            return (
-              <mesh
-                key={`${detail.name}wireframeOBB/${i}`}
-                position={detail.userData.obb.center}
-                rotation={new THREE.Euler().setFromRotationMatrix(new THREE.Matrix4().setFromMatrix3(
-                  detail.userData.obb.rotation
-                ))}
-                castShadow = {false}
-                receiveShadow = {false}
-              >
-                <boxGeometry args={[
-                  detail.userData.obb.halfSize.x*2, 
-                  detail.userData.obb.halfSize.y*2, 
-                  detail.userData.obb.halfSize.z*2
-                  ]} />
-                <meshBasicMaterial color={'red'} wireframe wireframeLinewidth={0.15}/>
-              </mesh>
-          )} else {return null}})
-        }
-        {placedDetail.current[0] &&
-          placedDetail.current.map((detail, i) => {
-            if (detail) {
-              return (
-                <mesh 
-                  key={`placedDetail${detail.name}wireframeOBB/${i}`}
-                  position={detail.userData.obb.center}
-                  rotation={new THREE.Euler().setFromRotationMatrix(new THREE.Matrix4().setFromMatrix3(
-                    detail.userData.obb.rotation
-                  ))}
-                  castShadow = {false}
-                  receiveShadow = {false}
-                >
-                  <boxGeometry args={[
-                    detail.userData.obb.halfSize.x*2, 
-                    detail.userData.obb.halfSize.y*2,
-                    detail.userData.obb.halfSize.z*2]} />
-                  <meshBasicMaterial color={'red'} wireframe wireframeLinewidth={0.15}/>
-                </mesh>
-            )
-            } else {return null}
-          })
-        }
-      </group>
+    </group>
+    {helpersBoxes.length>0 && <HelpersBoxes helpersBoxesObbArray={helpersBoxes} />}
     {hlinePoints.length > 0 &&
       <Line 
         ref={highLightLine} 
@@ -529,7 +494,7 @@ useEffect(() => {
       />
       ))
     }
-    {groupAssembled.current && <Backdrop height = {getDistance(groupAssembled.current).height} />}
+    {/* {groupAssembled.current && <Backdrop height = {getDistance(groupAssembled.current).height} />} */}
     </group>
   )
 }

@@ -1,9 +1,7 @@
-import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Float, Preload, useGLTF } from '@react-three/drei'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { CanvasLoader } from '../components'
 import { Parts } from '../config/constants'
-import { v4 as uuidv4 } from 'uuid'
 
 import {
   Selection,
@@ -64,7 +62,7 @@ const Model = ({ nodes, setClicked, clicked, setDist, setTargetObj }) => {
             x: posX,
             y:-partSizeY/2,
             z: posZ
-          }, 1000
+          }, 500
         ).easing(TWEEN.Easing.Cubic.Out).start().onComplete(() => {
           if (i == (count - 1)) {
             setClickedPart()

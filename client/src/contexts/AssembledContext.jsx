@@ -12,16 +12,11 @@ export const useAssembled = () => useContext(AssembledContext);
 
 export const AssembledProvider = ({ snap, children }) => {
 
-  const stateString = useMemo(()=> JSON.stringify(snap.assemblyMap), [JSON.stringify(snap.assemblyMap)])
+  const stateString = JSON.stringify(snap.assemblyMap)
   const textures = useTextures()
   const objects = useMemo(() => Object.keys(Parts).map(
       (name) => useGLTF(`/${name}.glb`)
   ), [Parts.toString()])
-
-  const scaleTexture = (texture, instructionScale) => {
-
-    return scaledTexture
-  }
 
   const objectArray = (objects) => {
   
@@ -39,6 +34,7 @@ export const AssembledProvider = ({ snap, children }) => {
           const detailsMaterialArray = []
           for (let node of Object.keys(objectNodes)) {
             if (node.includes('Detail')) {
+              console.log(node)
               const objectGeometry = new THREE.BufferGeometry() // новая буфергеометрия для mesh
               objectGeometry.copy(
                 objectNodes[node].geometry // создаем независимую копию геометрии для mesh
@@ -122,7 +118,7 @@ export const AssembledProvider = ({ snap, children }) => {
           objectMaterialArray.push(detailsMaterialArray) // ССЫЛКА на материал
         })
       }
-      return {userDataArray, objectGeometryArray, objectMaterialArray, meshOBB}
+      return {userDataArray, objectGeometryArray, objectMaterialArray, meshOBB, textures}
   }
     
   const positions = (assemblyMap, userDataArray) => {

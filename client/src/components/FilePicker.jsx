@@ -4,8 +4,10 @@ import PropTypes from 'prop-types'
 
 import CustomButton from './CustomButton'
 import { FilePreview } from '../canvas'
+import appState from '../store'
 
 const FilePicker = ({ file, setFile, handleDownLoad }) => {
+  appState.camRotation = false
   console.log('FILEPICKER RENDERED')
   return (
     <div

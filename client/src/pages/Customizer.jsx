@@ -5,7 +5,7 @@ import { useSnapshot } from 'valtio'
 import appState from '../store'
 
 import { downloadFile, reader } from '../config/helpers'
-import { EditorTabs, TransformTabs, FileOpsTypes, Parts, alerts } from '../config/constants'
+import { EditorTabs, TransformTabs, Parts, alerts } from '../config/constants'
 
 import { fadeAnimation, slideAnimation } from '../config/motion'
 
@@ -17,16 +17,22 @@ const Customizer = () => {
   const snap = useSnapshot(appState)
   // глубокое копирование карты сборки
   const assemblyMap = snap.assemblyMap
+  const placedDetail = assemblyMap[assemblyMap.length-1]
+
   // свободных коннекторов, номера свободного коннектора для перемещения на него
   const freeCons = snap.freeCons
   // состояние для файла загрузки
-  const [file, setFile] = useState(null)
-// есть ли детали в сборке, есть ли свободные коннекторы, есть ли деталь с которой работаем
+  // есть ли детали в сборке, есть ли свободные коннекторы, есть ли деталь с которой работаем
+  const intersectedState = snap.intersected
   const [conNumber, setConNumber] = useState(0)
   const hasFreeCons = Boolean(freeCons[0])
   const hasParts = Boolean(assemblyMap.length > 0)
   const [hasNimbedPart, setHasNimbedPart] = useState(
-    assemblyMap.length>1 ? Boolean(assemblyMap[assemblyMap.length-1].id < 0) : false)
+    assemblyMap.length>1 ? Boolean(placedDetail.id < 0) : false)
+  const hasBackground = Boolean(snap.backgroundObj.backgroundImg)
+  const hasBackgroundMode = snap.backgroundObj.mode
+
+  const [file, setFile] = useState(null)
 // функция для получения свойства поворачиваемости из каталога деталей
   const isRotatable = (partName) => {
 
@@ -57,6 +63,7 @@ const Customizer = () => {
     place: false,
     rotate:false
   })
+
 // функция генерации содержимого вкладок конструктора в зависимости от имени активной вкладки в состоянии
   const generateTabContent = () => {
     switch (activeEditorTab) {
@@ -92,7 +99,16 @@ const Customizer = () => {
         downloadFile('mainCanvas')
         break
       case "Set Background":
-        readFile(file)
+        if (!hasNimbedPart) {
+          readFile(file)
+          setActiveTransformTab({
+            changePosition: true,
+            place: false,
+            rotate:false
+          })
+        } else {
+          alert('Закончите установку детали...')
+        }
         break
       default:
         return
@@ -119,7 +135,16 @@ const Customizer = () => {
     try {
       reader(file).then((result) => {
         if (file.type == 'image/jpeg') {
-          appState.background = result
+          const img = new Image()
+          img.src = result
+          appState.backgroundObj = {
+            backgroundImg: result,
+            width: img.width/Math.min(img.width, img.height),
+            height: img.height/Math.min(img.width, img.height),
+            position: [0,0,0],
+            rotation: [0,0,0],
+            mode: 'translate'
+          }
         } else {
           appState.assemblyMap = JSON.parse(result)
         }
@@ -275,6 +300,15 @@ const Customizer = () => {
   }
 
   const setNewPosition = () => {
+
+    console.log('MODE CHANGED', hasNimbedPart, hasBackground)
+    if (hasBackground && hasNimbedPart == false) {
+      const modes = ['none', 'translate', 'scale', 'rotate']
+      const currModeIndex = modes.indexOf(hasBackgroundMode)
+      const nextModeIndex = currModeIndex + 1 >= modes.length - 1 ? 0 : currModeIndex + 1
+      appState.backgroundObj.mode = modes[nextModeIndex]
+      console.log('MODE - ', modes[nextModeIndex])
+    }
   
 // функция установки детали с которой работаем на сборку в новой позиции (при нажатии кнопки перемещения на вкладке трансформации)
 // отсеим свободные коннекторы с отрицательным индексом то есть те которые относятся к детали с которой работаем
@@ -331,21 +365,17 @@ const Customizer = () => {
       }]
       // если этот коннектор последний то назначим номер нулем иначе следующим номером свободного коннектора
       countIndex + 1 > freeConsToPlace.length - 1 ? setConNumber(0) : setConNumber(conNumber + 1) 
-    } else {
+    } else if (hasNimbedPart) {
       alert(alerts.onlyOnePositionsAvalable.ru)
     }
 
   }
 
   const placeDetail = () => {
-    
-    const intersectedState = snap.intersected
-
     if (hasNimbedPart) {
       const trueIntersections = intersectedState.filter((state) => state[2])
-      const placedDetail = appState.assemblyMap[assemblyMap.length-1]
-      if (trueIntersections.length<2) {
-        placedDetail.id = -placedDetail.id
+      if (trueIntersections.length<2 && placedDetail.type !== 'jumper') {
+        appState.assemblyMap[assemblyMap.length-1].id = -placedDetail.id
         setHasNimbedPart(false)
       } else if (
         trueIntersections.length == 2 &&  
@@ -356,23 +386,25 @@ const Customizer = () => {
       ) {
         placedDetail.id = -placedDetail.id
         setHasNimbedPart(false)
-      } else if (
-        trueIntersections.length == 2 && 
-        placedDetail.type == 'jumper'
-      ) {
-        placedDetail.id = -placedDetail.id
-        setHasNimbedPart(false)
-      }  else if (
-        trueIntersections.length == 3 && 
-        placedDetail.type == 'jumper' &&
-        trueIntersections.reduce(
-          (accum, val) => 
-            accum += val.filter(
-              (name) => name.toString().includes('hause')
-            ).length, 0) == 2
-      ) {
-        placedDetail.id = -placedDetail.id
-        setHasNimbedPart(false)
+      } else if (placedDetail.type == 'jumper' && placedDetail.position.toString().replace(/\D/g, '') !== '000') {
+        console.log('PLACED DETAI POSITION ', placedDetail.position.toString().replace(/\D/g, ''))
+
+        if (trueIntersections.length == 2)
+          {
+            appState.assemblyMap[assemblyMap.length-1].id = -placedDetail.id
+            setHasNimbedPart(false)
+          }  else if (
+            trueIntersections.length == 3 && 
+            trueIntersections.reduce(
+              (accum, val) => 
+                accum += val.filter(
+                  (name) => name.toString().includes('hause')
+                ).length, 0) == 2
+            ) 
+          {
+            appState.assemblyMap[assemblyMap.length-1].id = -placedDetail.id
+           setHasNimbedPart(false)
+        } 
       } else {
         alert(alerts.intersectionDetected.ru)
         return
@@ -386,7 +418,7 @@ const Customizer = () => {
       })
 
       setActiveTransformTab({
-        changePosition: false,
+        changePosition: Boolean(snap.backgroundObj.backgroundImg),
         place: false,
         rotate:false
       })
