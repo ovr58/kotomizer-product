@@ -129,7 +129,8 @@ export const Parts = {
   part9: {
     type: 'jut',
     connectors: ['center'],
-    rotatable: false,
+    rotatable: true,
+    height: 0.1203,
     filename: '/part9.glb',
     price: 48,
     description: 'part9 description',

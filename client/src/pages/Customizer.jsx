@@ -21,10 +21,12 @@ const Customizer = () => {
 
   // свободных коннекторов, номера свободного коннектора для перемещения на него
   const freeCons = snap.freeCons
+  // свободные колонны для установки джута - в последствии можно отсевиать по диаметру placedDetail
+  const freeColumns = assemblyMap.filter((instruction) => instruction.type === 'column' && instruction.id >= 0)
+
   // состояние для файла загрузки
   // есть ли детали в сборке, есть ли свободные коннекторы, есть ли деталь с которой работаем
   const intersectedState = snap.intersected
-  const [conNumber, setConNumber] = useState(0)
   const hasFreeCons = Boolean(freeCons[0])
   const hasParts = Boolean(assemblyMap.length > 0)
   const [hasNimbedPart, setHasNimbedPart] = useState(
@@ -188,7 +190,7 @@ const Customizer = () => {
 // если индекс добавляемой детали не равен нулю
     if (partIndex != 0) {
       // если это не джампер по типу
-      if (partType != 'jumper') {
+      if (partType != 'jumper' && partType != 'jut') {
         // функция может выдать ошибку если деталь уже с сцене а кнопка 
         // была нажата поэтому проверим что нет детали в сцене
         !hasNimbedPart && appState.assemblyMap.push({
@@ -203,27 +205,72 @@ const Customizer = () => {
           material: {}
         })
       } else {
-        // добавим запись о джампере
-        !hasNimbedPart && appState.assemblyMap.push({
-          id: -partIndex,
-          name: part,
-          type: partType,
-          connectedTo: [{
-            id:0,
-            connector: {name: 'jumper1start'},
-            position: [0,0,0]
-         },{
-           id:3,
-           connector: {name: 'jumper1end'},
-           position: [0,0,0]
-           }],
-          position: [0, 0, 0],
-          rotation: [0, 0, 0],
-          scale: [1, 1, 1],
-          maxScale: 1,
-          material: {}
-          } )
+        // добавим запись о джампере или джуте
+        if (!hasNimbedPart) {
+          switch (partType) {
+          case 'jumper':
+            appState.assemblyMap.push({
+             id: -partIndex,
+             name: part,
+             type: partType,
+             connectedTo: [{
+               id:0,
+               connector: {name: 'jumper1start'},
+               position: [0,0,0]
+            },{
+              id:3,
+              connector: {name: 'jumper1end'},
+              position: [0,0,0]
+              }],
+             position: [0, 0, 0],
+             rotation: [0, 0, 0],
+             scale: [1, 1, 1],
+             maxScale: 1,
+             material: {}
+            } )
+            break;
+          case 'jut':
+            if (freeColumns.length > 0) {
+              appState.assemblyMap.push({
+                id: -partIndex,
+                name: part,
+                type: partType,
+                connectedTo: [{
+                  id: freeColumns[0].id,
+                  connector: {name: 'jutconnector'},
+                  position: freeColumns[0].position,
+                }],
+                position: [
+                  freeColumns[0].position[0], 
+                  freeColumns[0].position[1], 
+                  freeColumns[0].position[2]
+                ],
+                rotation: [0, 0, 0],
+                scale: [1, 1, 1],
+                repeat: 1,
+                height: Parts[part].height,
+                material: {}
+              } )
+            } else {
+              alert('Нет доступных деталей для установки...')
+              setPartPickerButtonsStatus({
+                undoButton: false,
+                addButton: true,
+                deleteLastButton: true
+              })
+              setActiveTransformTab({
+                changePosition: false,
+                place: false,
+                rotate:false
+              })
+              setHasNimbedPart(false)
+            }
+            break
+          default:
+            break;
         }
+        }
+      }
       // изменим статусы так чтобы вкладка не мешала редактированию и статус наличия детали с которой работаем
       setActiveEditorTab('') 
       setHasNimbedPart(true)
@@ -301,8 +348,8 @@ const Customizer = () => {
 
   const setNewPosition = () => {
 
-    console.log('MODE CHANGED', hasNimbedPart, hasBackground)
     if (hasBackground && hasNimbedPart == false) {
+      console.log('MODE CHANGED', hasNimbedPart, hasBackground)
       const modes = ['none', 'translate', 'scale', 'rotate']
       const currModeIndex = modes.indexOf(hasBackgroundMode)
       const nextModeIndex = currModeIndex + 1 >= modes.length - 1 ? 0 : currModeIndex + 1
@@ -315,19 +362,19 @@ const Customizer = () => {
     let freeConsToPlace = freeCons.filter(freeCon => freeCon.id >= 0)
 // индекс детали с которой работаем в карте сборки
     const index = assemblyMap.length-1
-    if (hasNimbedPart && assemblyMap[index].type == 'jumper') {
+    if (hasNimbedPart && placedDetail.type == 'jumper') {
     // работаем если устанавливаем джампер
     // начала и конец рельсы перемещения джампера
       const start = new Vector3()
       const end = new Vector3()
-      start.copy(assemblyMap[index].connectedTo[0].position)
-      end.copy(assemblyMap[index].connectedTo[1].position)
+      start.copy(placedDetail.connectedTo[0].position)
+      end.copy(placedDetail.connectedTo[1].position)
       // вектор рельсы и длина джампера по факту
       const rail = new Vector3().subVectors(start, end)
-      const length = rail.length() * assemblyMap[assemblyMap.length-1].scale[0]
+      const length = rail.length() * placedDetail.scale[0]
       // начальная позиция джампера
       const position = new Vector3()
-      position.fromArray(assemblyMap[index].position)
+      position.fromArray(placedDetail.position)
       position.lerp(end.clone(), 0.1) // не надо нормализовать
       // вектора от позиции до конца релься и до начала рельсы
       const toEnd = new Vector3().subVectors(position, end)
@@ -343,28 +390,39 @@ const Customizer = () => {
       appState.assemblyMap[index].position = position.toArray()
       return
     }
-    // если работаем с другой деталью не с джампером
-    if (hasNimbedPart && freeCons[0]) {
-      // если номер свободного коннектора больше последнего из всех свободных коннекторов то назначим первый из свободных
-      let countIndex = conNumber
-      const conConnectedToCurrentName = snap.assemblyMap[assemblyMap.length - 1].connectedTo[0].connector.name
-      const conConnectedToCurrentId = snap.assemblyMap[assemblyMap.length - 1].connectedTo[0].id
-      const indexInFreeCons = freeConsToPlace.indexOf(
-        freeConsToPlace.filter(
-          (freeCon) => 
-            freeCon.conName == conConnectedToCurrentName && freeCon.id == conConnectedToCurrentId)[0])
-      // в объекте детали в карте сборке присвоим новый коннектор
-      if (indexInFreeCons == countIndex && (countIndex + 1) <= (freeCons.length - 1)) {
-        countIndex ++
-      } else if (indexInFreeCons == conNumber && (conNumber + 1) > (freeCons.length - 1)) {
-        countIndex = 0
+    if (hasNimbedPart && placedDetail.type === 'jut') {
+      if (freeColumns.length > 0) {
+        const idArr = freeColumns.map((column) => column.id)
+        let currIndex = idArr.indexOf(placedDetail.connectedTo[0].id)
+        let nextIndex = (currIndex + 1) > (freeColumns.length - 1) ? 0 : currIndex + 1
+        appState.assemblyMap[index].connectedTo = [{
+          id: freeColumns[nextIndex].id,
+          connector: {name: 'jutconnector'},
+          position: freeColumns[nextIndex].position,
+        }]
+        appState.assemblyMap[index].position = [
+          freeColumns[nextIndex].position[0], 
+          freeColumns[nextIndex].position[1], 
+          freeColumns[nextIndex].position[2]
+        ]
+        return
+      } else {
+        alert(alerts.onlyOnePositionsAvalable.ru)
       }
-      appState.assemblyMap[assemblyMap.length-1].connectedTo = [{
-        id: freeCons[countIndex].id,
-        connector: {name: freeCons[countIndex].conName}
+    }
+    // если работаем с другой деталью не с джампером
+    if (hasNimbedPart && freeConsToPlace[0]) {
+      console.log(freeConsToPlace)
+      // если номер свободного коннектора больше последнего из всех свободных коннекторов то назначим первый из свободных
+      const idArr = freeConsToPlace.map((freeCon) => freeCon.id)
+      let currIndex = idArr.indexOf(placedDetail.connectedTo[0].id)
+      let nextIndex = (currIndex + 1) > (freeConsToPlace.length - 1) ? 0 : currIndex + 1
+      appState.assemblyMap[index].connectedTo = [{
+        id: freeConsToPlace[nextIndex].id,
+        connector: {name: freeConsToPlace[nextIndex].conName}
       }]
       // если этот коннектор последний то назначим номер нулем иначе следующим номером свободного коннектора
-      countIndex + 1 > freeConsToPlace.length - 1 ? setConNumber(0) : setConNumber(conNumber + 1) 
+      // countIndex + 1 > freeConsToPlace.length - 1 ? setConNumber(0) : setConNumber(conNumber + 1) 
     } else if (hasNimbedPart) {
       alert(alerts.onlyOnePositionsAvalable.ru)
     }
@@ -429,10 +487,14 @@ const Customizer = () => {
 
     if (hasNimbedPart) {
 
-      if (isRotatable(assemblyMap[assemblyMap.length-1].name)) {
-        if (assemblyMap[assemblyMap.length-1].type == 'jumper') {
+      if (isRotatable(placedDetail.name)) {
+        if (placedDetail.type == 'jumper') {
           const maxScale = assemblyMap[assemblyMap.length-1].maxScale
-          appState.assemblyMap[assemblyMap.length-1].scale[0] = (value/360)*(maxScale-0.2) + 0.2
+          appState.assemblyMap[assemblyMap.length-1].scale[0] = (Math.abs(value)/360)*(maxScale-0.2) + 0.2
+        } else if (placedDetail.type === 'jut') {
+          const maxRepeat = placedDetail.maxRepeat
+          console.log('MAX REPEAT - ', maxRepeat, value)
+          appState.assemblyMap[assemblyMap.length-1].repeat = Number(((Math.abs(value)/360)*(maxRepeat-1)).toFixed(0)) + 1 
         } else {
           appState.assemblyMap[assemblyMap.length-1].rotation = [0, value*(Math.PI/180), 0]
         }

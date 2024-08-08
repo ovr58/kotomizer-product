@@ -5,6 +5,7 @@ import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three'
 import { OBB } from 'three/addons/math/OBB.js' // OBB - oriented bounding box отдельный плагин для коробок (есть пример на threejs)
 import { useTextures } from './TextureContext';
+import { mergeBufferGeometries } from '../config/helpers';
 
 const AssembledContext = createContext()
 
@@ -36,25 +37,47 @@ export const AssembledProvider = ({ snap, children }) => {
             if (node.includes('Detail')) {
               console.log(node)
               const objectGeometry = new THREE.BufferGeometry() // новая буфергеометрия для mesh
-              objectGeometry.copy(
-                objectNodes[node].geometry // создаем независимую копию геометрии для mesh
-              )
+              if (instruction.type === 'jut') {
+                const geometries = []
+                console.log('INSTRUCTION REPEAT - ', instruction.repeat)
+                for (let i = 0; i < instruction.repeat; i++) {
+                  const geom = objectNodes[node].geometry.clone();
+                  console.log(objectNodes[node].geometry)
+                  const geometryHeight = objectNodes[node].geometry.boundingBox.max.y - objectNodes[node].geometry.boundingBox.min.y
+                  geom.translate(0, i* 0.94 * geometryHeight, 0); // Смещение геометрии по оси Y
+                  i != 0 && geom.rotateY(-Math.PI/15)
+                  geometries.push(geom);
+                }
+                objectGeometry.copy(
+                  mergeBufferGeometries(geometries)
+                )
+                objectGeometry.center()
+              } else {
+                objectGeometry.copy(
+                  objectNodes[node].geometry // создаем независимую копию геометрии для mesh
+                )
+              }
               objectGeometry.computeBoundingBox() // вычисляем коробку с размерами геометрии
               objectGeometry.userData.obb = new OBB().fromBox3(
                 objectGeometry.boundingBox // пишем в userData геометрии новый OBB созданный из его коробки
               )
+              
               detailsArray.push(objectGeometry)
               const detailIndex = detailsArray.length - 1
-              const matArray = [...textures, objectNodes[node].material]
+              const matArray = [
+                ...textures, 
+                  objectNodes[node].material
+                ]
+              console.log(textures, matArray)
               let detailMaterial
               if (instruction.material[detailIndex]) {
-                detailMaterial = Object.assign({}, matArray.filter((mat) => mat.name == instruction.material[detailIndex])[0])
+                detailMaterial = Object.assign({}, matArray.filter(
+                  (mat) => mat.name == instruction.material[detailIndex]
+                )[0])
               } else {
                 detailMaterial = objectNodes[node].material.clone()
               }
               if (instruction.scale) {
-                console.log(instruction.scale, instruction.type)
-
                 const u = instruction.scale[1]
                 const v = instruction.scale[0]
                 console.log('UV', u, v)
@@ -121,7 +144,7 @@ export const AssembledProvider = ({ snap, children }) => {
       return {userDataArray, objectGeometryArray, objectMaterialArray, meshOBB, textures}
   }
     
-  const positions = (assemblyMap, userDataArray) => {
+  const positions = (assemblyMap, userDataArray, objectGeometryArray) => {
     
     let freeCons = []
 
@@ -130,7 +153,7 @@ export const AssembledProvider = ({ snap, children }) => {
       let partId = Math.abs(instruction.id)
       let positionClone = []
 
-      if (instruction.type != 'jumper') {
+      if (instruction.type !== 'jumper' && instruction.type !== 'jut') {
         let consNames = userDataArray[partId].consNames
         if (consNames.length > 0) {
           let vertexCoord = userDataArray[partId].objectCons.getAttribute('position')
@@ -170,11 +193,18 @@ export const AssembledProvider = ({ snap, children }) => {
             }
           }
         }
-      } else {
-        console.log('POSITION', instruction.position)
+      } else if (instruction.type === 'jumper') {
         positionClone[0] = instruction.position[0]
         positionClone[1] = instruction.position[1]
         positionClone[2] = instruction.position[2]
+      } else if (instruction.type === 'jut') {
+        const toCenterY = objectGeometryArray[instruction.connectedTo[0].id][0].userData.obb.halfSize.y * 2
+        const jutSizeY = instruction.height
+        const maxRepeat = Number((toCenterY / jutSizeY).toFixed(0))
+        positionClone[0] = instruction.connectedTo[0].position[0]
+        positionClone[1] = instruction.connectedTo[0].position[1] + toCenterY /2 
+        positionClone[2] = instruction.connectedTo[0].position[2]
+        assemblyMap[partId].maxRepeat = maxRepeat
       }
         assemblyMap[partId].position = positionClone
     }
@@ -185,7 +215,7 @@ export const AssembledProvider = ({ snap, children }) => {
     
     const setPositions = useMemo(() => positions(
       JSON.parse(JSON.stringify(snap.assemblyMap)), 
-      setObjectArray.userDataArray), [stateString])
+      setObjectArray.userDataArray, setObjectArray.objectGeometryArray), [stateString])
     
     const assembledObj = {
       stateString: stateString,

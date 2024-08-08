@@ -39,7 +39,7 @@ const Assembled = () => {
   const [objectToChange, setObjectToChange] = useState({name: null, position: [0,0,0], textureCurrent: null})
   const [helpersBoxes, setHelpersBoxes] = useState([])
 
-  console.log('rerender Assembled MAIN - ', groupAssembled, details)
+  console.log('rerender Assembled MAIN - ', assembledObj, details)
   
 const findIntersections = () => {
     // поиск наложений (постоянного оверлапа) объектов в сцене
@@ -404,6 +404,7 @@ useEffect(() => {
     appState.freeCons = assembledObj.freeCons
     const intersected = findIntersections()
     appState.intersected = intersected
+    appState.assemblyMap = assembledObj.assemblyMap
   } 
   }, [assembledObj.stateString])
     
@@ -454,13 +455,13 @@ useEffect(() => {
                   onClick ={(placedDetail.current[0] && placedDetail.current[0].name.includes('jumper')) && 
                     ((e) => (e.stopPropagation(), placeOnEdge(e)))}
                   onDoubleClick={!placedDetail.current[0] &&
-                    ((e) => ( 
+                    ((e) => (e.stopPropagation(), 
                       setObjectToChange({
                         name: e.object.name,
                         position: e.object.userData.obb.center.toArray(),
                         textureCurrent: e.object.material.name,
                         textureDefault: assembledObj.setObjectArray.objectMaterialArray[i][iOfDetail],
-                      }), appState.camRotation = false, console.log('Obeject set - rotation to false set')
+                      }), appState.camRotation = false
                     ))}
                 >
                   {instruction.id>=0 ? 
