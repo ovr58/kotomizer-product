@@ -416,7 +416,10 @@ useEffect(() => {
         name={objectToChange.name}
         textureCurrent = {objectToChange.textureCurrent}
         textureDefault = {objectToChange.textureDefault}
-        textures = {assembledObj.setObjectArray.textures}
+        textures = {assembledObj.setObjectArray.textures.filter(
+          (texture) => (objectToChange.name.includes('jut') === texture.name.includes('Jut')
+            )
+        )}
         size={getPartSize(groupAssembled.current)}
         setObjectState={setObjectToChange}
       /> 
