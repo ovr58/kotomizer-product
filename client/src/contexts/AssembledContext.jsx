@@ -35,14 +35,11 @@ export const AssembledProvider = ({ snap, children }) => {
           const detailsMaterialArray = []
           for (let node of Object.keys(objectNodes)) {
             if (node.includes('Detail')) {
-              console.log(node)
               const objectGeometry = new THREE.BufferGeometry() // новая буфергеометрия для mesh
               if (instruction.type === 'jut') {
                 const geometries = []
-                console.log('INSTRUCTION REPEAT - ', instruction.repeat)
                 for (let i = 0; i < instruction.repeat; i++) {
                   const geom = objectNodes[node].geometry.clone();
-                  console.log(objectNodes[node].geometry)
                   const geometryHeight = objectNodes[node].geometry.boundingBox.max.y - objectNodes[node].geometry.boundingBox.min.y
                   geom.translate(0, i* 0.94 * geometryHeight, 0); // Смещение геометрии по оси Y
                   i != 0 && geom.rotateY(-Math.PI/15)
@@ -64,12 +61,13 @@ export const AssembledProvider = ({ snap, children }) => {
               
               detailsArray.push(objectGeometry)
               const detailIndex = detailsArray.length - 1
-              const matArray = [
-                ...textures, 
-                  objectNodes[node].material
-                ]
-              console.log(textures, matArray)
-              let detailMaterial
+              console.log(textures)
+              // const matArray = [
+              //     ...textures.map((texture) => JSON.parse(JSON.stringify(texture))),
+              //     objectNodes[node].material.clone()
+              //   ]
+              console.log(textures)
+              let detailMaterial = {}
               if (instruction.material[detailIndex]) {
                 detailMaterial = Object.assign({}, matArray.filter(
                   (mat) => mat.name == instruction.material[detailIndex]

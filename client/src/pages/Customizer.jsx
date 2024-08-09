@@ -18,7 +18,20 @@ const Customizer = () => {
   // глубокое копирование карты сборки
   const assemblyMap = snap.assemblyMap
   const placedDetail = assemblyMap[assemblyMap.length-1]
-
+  switch (placedDetail.type) {
+    case 'jut':
+      TransformTabs[2].label = 'заполнить'
+      TransformTabs[2].indicator = placedDetail.repeat
+      break;
+    case 'jumper':
+      TransformTabs[2].label = 'ширина'
+      TransformTabs[2].indicator = `${placedDetail.scale[0].toFixed(2)}`
+      break;
+    default:
+      TransformTabs[2].label = 'повернуть'
+      TransformTabs[2].indicator = `${placedDetail.rotation[1]*180/Math.PI}гр`
+      break;
+  }
   // свободных коннекторов, номера свободного коннектора для перемещения на него
   const freeCons = snap.freeCons
   // свободные колонны для установки джута - в последствии можно отсевиать по диаметру placedDetail
@@ -246,7 +259,6 @@ const Customizer = () => {
                   freeColumns[0].position[2]
                 ],
                 rotation: [0, 0, 0],
-                scale: [1, 1, 1],
                 repeat: 1,
                 height: Parts[part].height,
                 material: {}
@@ -493,7 +505,6 @@ const Customizer = () => {
           appState.assemblyMap[assemblyMap.length-1].scale[0] = (Math.abs(value)/360)*(maxScale-0.2) + 0.2
         } else if (placedDetail.type === 'jut') {
           const maxRepeat = placedDetail.maxRepeat
-          console.log('MAX REPEAT - ', maxRepeat, value)
           appState.assemblyMap[assemblyMap.length-1].repeat = Number(((Math.abs(value)/360)*(maxRepeat-1)).toFixed(0)) + 1 
         } else {
           appState.assemblyMap[assemblyMap.length-1].rotation = [0, value*(Math.PI/180), 0]

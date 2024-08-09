@@ -26,7 +26,19 @@ const Tab = ({ tab, isActive, isTransformTab, handleClick }) => {
           key={tab.name} 
           className='tab-btn rounded-full glassmorphism rounded-4' 
         >
-          <KnobControl setValue={setValue} value={value} customStyle={isActive ? 'opacity-100 fill-black' : 'opacity-50 fill-yellow-100 pointer-events-none'} />
+          <div className="relative group">
+            <KnobControl 
+              indicator={tab.indicator}
+              setValue={setValue}
+              customStyle={
+                isActive ? 'opacity-100 fill-black' : 'opacity-50 fill-yellow-100 pointer-events-none'
+              } 
+            />
+            <div className="absolute hidden px-2 py-1 text-sm text-center text-white bg-gray-700 rounded opacity-0 group-hover:block group-hover:opacity-100 transition-opacity duration-300 -top-10 left-1/2 transform -translate-x-1/2">
+              {tab.label}
+            <div className="absolute w-3 h-3 bg-gray-700 transform rotate-45 -bottom-1 left-1/2 -translate-x-1/2"></div>
+            </div>
+          </div>
         </div> :
         <div 
           key={tab.name} 
@@ -34,11 +46,36 @@ const Tab = ({ tab, isActive, isTransformTab, handleClick }) => {
           onClick={() => handleClick(value)}
           style={activeStyles}
         >
-          <img 
-            src={tab.icon}
-            alt={tab.name}
-            className='object-contain'
-          />
+          <div className="relative group">
+            <img 
+              src={tab.icon}
+              alt={tab.name}
+              className='object-contain'
+            />
+            <div className={
+              `absolute 
+              hidden 
+              px-2 
+              py-1 
+              text-sm 
+              text-center
+              text-white
+              bg-gray-700 
+              rounded 
+              opacity-0 
+              group-hover:block 
+              group-hover:opacity-100 
+              transition-opacity 
+              duration-300 
+              -top-10 
+              left-1/2 
+              ${!isTransformTab ? 'transform -translate-x-1/4' : 'transform -translate-x-1/2'}`
+              }
+            >
+              {tab.label}
+            <div className={`absolute w-3 h-3 bg-gray-700 transform rotate-45 -bottom-1 ${!isTransformTab ? 'left-1/4' : 'left-1/2'} -translate-x-1/2`}></div>
+            </div>
+          </div>
         </div>
       }
     </>

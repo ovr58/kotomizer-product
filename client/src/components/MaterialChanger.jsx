@@ -152,7 +152,7 @@ const Model = ({ name, positionCorrection, size, textureName, textureDefault, te
     >
       {textures && [...textures, textureDefault].map((material, i, arr) => (
         <Select
-          key={`${material.name}/i`}
+          key={`${material.name}/${i}`}
           enabled={
             hovered == material.name ||
             material.name == textureName 

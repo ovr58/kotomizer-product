@@ -8,10 +8,12 @@ export const EditorTabs = [
   {
     name: "filepicker",
     icon: fileIcon,
+    label: 'скачивание/загрузка/скриншот'
   },
   {
     name: "partspicker",
     icon: ai,
+    label: 'каталог деталей'
   },
 ];
 
@@ -20,16 +22,19 @@ export const TransformTabs = [
     name: 'changePosition',
     type: 'customButton',
     icon: positionIcon,
+    label: 'перемещать'
   },
   {
     name: 'place',
     type: 'customButton',
     icon: placeIcon,
+    label: 'прикрепить'
   },
   {
     name: 'rotate',
     type: 'knobControl',
-    icon: rotateIcon
+    icon: rotateIcon,
+    label: 'поворот'
 
   }
 ]
