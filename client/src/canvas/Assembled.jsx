@@ -416,7 +416,11 @@ useEffect(() => {
         name={objectToChange.name}
         textureCurrent = {objectToChange.textureCurrent}
         textureDefault = {objectToChange.textureDefault}
-        textures = {assembledObj.setObjectArray.textures.filter(
+        textures = {assembledObj.setObjectArray.textures.
+          map(
+            (texture) => texture.clone()
+          ).
+          filter(
           (texture) => (objectToChange.name.includes('jut') === texture.name.includes('Jut')
             )
         )}
@@ -463,7 +467,7 @@ useEffect(() => {
                         name: e.object.name,
                         position: e.object.userData.obb.center.toArray(),
                         textureCurrent: e.object.material.name,
-                        textureDefault: assembledObj.setObjectArray.objectMaterialArray[i][iOfDetail],
+                        textureDefault: assembledObj.setObjectArray.objectDefaultMaterialArray[i][iOfDetail],
                       }), appState.camRotation = false
                     ))}
                 >

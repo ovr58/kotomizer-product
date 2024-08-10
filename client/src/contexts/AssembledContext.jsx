@@ -24,6 +24,7 @@ export const AssembledProvider = ({ snap, children }) => {
       const userDataArray = [] // массив данных для OBB, и коннекторов каждой детали
       const objectGeometryArray = [] // массив всех геометрий
       let objectMaterialArray = [] // массив всех материалов (возможна смена материалов)
+      let objectDefaultMaterialArray = []
       const meshOBB = []
   // если успели загрузить объекты из файла и получить карту сборки не пустую
       if (objects.length>0 && snap.assemblyMap.length>0) {
@@ -33,6 +34,7 @@ export const AssembledProvider = ({ snap, children }) => {
           // const objectCons = {} // пустой объект для хранения информации о коннекторах данной детали
           const detailsArray = []
           const detailsMaterialArray = []
+          const detailsDefaultMaterialArray = []
           for (let node of Object.keys(objectNodes)) {
             if (node.includes('Detail')) {
               const objectGeometry = new THREE.BufferGeometry() // новая буфергеометрия для mesh
@@ -61,12 +63,10 @@ export const AssembledProvider = ({ snap, children }) => {
               
               detailsArray.push(objectGeometry)
               const detailIndex = detailsArray.length - 1
-              console.log(textures)
-              // const matArray = [
-              //     ...textures.map((texture) => JSON.parse(JSON.stringify(texture))),
-              //     objectNodes[node].material.clone()
-              //   ]
-              console.log(textures)
+              const matArray = [
+                  ...textures.map((texture) => texture.clone()),
+                  objectNodes[node].material.clone()
+                ]
               let detailMaterial = {}
               if (instruction.material[detailIndex]) {
                 detailMaterial = Object.assign({}, matArray.filter(
@@ -75,40 +75,42 @@ export const AssembledProvider = ({ snap, children }) => {
               } else {
                 detailMaterial = objectNodes[node].material.clone()
               }
-              if (instruction.scale) {
-                const u = instruction.scale[1]
-                const v = instruction.scale[0]
-                console.log('UV', u, v)
-                detailMaterial.map && detailMaterial.map.repeat.set(u, v)
-                detailMaterial.normalMap && detailMaterial.normalMap.repeat.set(u, v)
-                detailMaterial.roughnessMap && detailMaterial.roughnessMap.repeat.set(u, v)
-                detailMaterial.aoMap && detailMaterial.aoMap.repeat.set(u, v)
-                detailMaterial.map && (
-                  () => 
-                    detailMaterial.map.wrapS = 
-                    detailMaterial.map.wrapT = 
-                    THREE.RepeatWrapping
-                  )
-                detailMaterial.normalMap && (
-                  () => 
-                    detailMaterial.normalMap.wrapS = 
-                    detailMaterial.normalMap.wrapT = 
-                    THREE.RepeatWrapping
-                  )
-                detailMaterial.roughnessMap && (
-                  () => 
-                    detailMaterial.roughnessMap.wrapS = 
-                    detailMaterial.roughnessMap.wrapT = 
-                    THREE.RepeatWrapping
-                  )
-                detailMaterial.aoMap && (
-                  () => 
-                    detailMaterial.aoMap.wrapS = 
-                    detailMaterial.aoMap.wrapT = 
-                    THREE.RepeatWrapping
-                  )
-              }
+              // if (instruction.scale) {
+              //   console.log('NAME OF MATERIAL - ', detailMaterial.name)
+              //   const u = instruction.scale[1]
+              //   const v = instruction.scale[0]
+              //   console.log('UV', u, v)
+              //   detailMaterial.map && detailMaterial.map.repeat.set(u, v)
+              //   detailMaterial.normalMap && detailMaterial.normalMap.repeat.set(u, v)
+              //   detailMaterial.roughnessMap && detailMaterial.roughnessMap.repeat.set(u, v)
+              //   detailMaterial.aoMap && detailMaterial.aoMap.repeat.set(u, v)
+              //   detailMaterial.map && (
+              //     () => 
+              //       detailMaterial.map.wrapS = 
+              //       detailMaterial.map.wrapT = 
+              //       THREE.RepeatWrapping
+              //     )
+              //   detailMaterial.normalMap && (
+              //     () => 
+              //       detailMaterial.normalMap.wrapS = 
+              //       detailMaterial.normalMap.wrapT = 
+              //       THREE.RepeatWrapping
+              //     )
+              //   detailMaterial.roughnessMap && (
+              //     () => 
+              //       detailMaterial.roughnessMap.wrapS = 
+              //       detailMaterial.roughnessMap.wrapT = 
+              //       THREE.RepeatWrapping
+              //     )
+              //   detailMaterial.aoMap && (
+              //     () => 
+              //       detailMaterial.aoMap.wrapS = 
+              //       detailMaterial.aoMap.wrapT = 
+              //       THREE.RepeatWrapping
+              //     )
+              // }
               detailsMaterialArray.push(detailMaterial)
+              detailsDefaultMaterialArray.push(objectNodes[node].material.clone())
             }
           }
           meshOBB.push(detailsArray.reduce((acc, _val) => acc = [...acc, {obb: new OBB()}], []))
@@ -137,9 +139,10 @@ export const AssembledProvider = ({ snap, children }) => {
           }
           objectGeometryArray.push(detailsArray) // записали
           objectMaterialArray.push(detailsMaterialArray) // ССЫЛКА на материал
+          objectDefaultMaterialArray.push(detailsDefaultMaterialArray)
         })
       }
-      return {userDataArray, objectGeometryArray, objectMaterialArray, meshOBB, textures}
+      return {userDataArray, objectGeometryArray, objectMaterialArray, meshOBB, textures, objectDefaultMaterialArray}
   }
     
   const positions = (assemblyMap, userDataArray, objectGeometryArray) => {

@@ -20,13 +20,14 @@ export const TextureProvider = ({ children }) => {
     textureLists.forEach((list, _i) => {
       const newMaterial = material.clone()
       const textures = useTexture(list)
-      newMaterial.name = list.split('/')[1]
+      newMaterial.name = list.map.split('/')[1]
       newMaterial.map = textures.map
       newMaterial.aoMap = textures.aoMap
       newMaterial.roughnessMap = textures.roughnessMap
       newMaterial.normalMap = textures.normalMap
       materials.push(newMaterial)
     })
+    console.log(materials)
 
   return (
     <TextureContext.Provider value={materials}>
