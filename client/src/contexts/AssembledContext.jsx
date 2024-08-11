@@ -1,10 +1,8 @@
 import React, { createContext, useContext, useMemo } from 'react'
-import { Parts } from '../config/constants';
-import { useGLTF } from '@react-three/drei';
 
 import * as THREE from 'three'
 import { OBB } from 'three/addons/math/OBB.js' // OBB - oriented bounding box отдельный плагин для коробок (есть пример на threejs)
-import { useTextures } from './TextureContext';
+import { useObjects } from './ObjectsContext';
 import { mergeBufferGeometries } from '../config/helpers';
 
 const AssembledContext = createContext()
@@ -14,17 +12,13 @@ export const useAssembled = () => useContext(AssembledContext);
 export const AssembledProvider = ({ snap, children }) => {
 
   const stateString = JSON.stringify(snap.assemblyMap)
-  const textures = useTextures()
-  const objects = useMemo(() => Object.keys(Parts).map(
-      (name) => useGLTF(`/${name}.glb`)
-  ), [Parts.toString()])
+  const {objects, materials} = useObjects()
 
   const objectArray = (objects) => {
   
       const userDataArray = [] // массив данных для OBB, и коннекторов каждой детали
       const objectGeometryArray = [] // массив всех геометрий
       let objectMaterialArray = [] // массив всех материалов (возможна смена материалов)
-      let objectDefaultMaterialArray = []
       const meshOBB = []
   // если успели загрузить объекты из файла и получить карту сборки не пустую
       if (objects.length>0 && snap.assemblyMap.length>0) {
@@ -34,7 +28,6 @@ export const AssembledProvider = ({ snap, children }) => {
           // const objectCons = {} // пустой объект для хранения информации о коннекторах данной детали
           const detailsArray = []
           const detailsMaterialArray = []
-          const detailsDefaultMaterialArray = []
           for (let node of Object.keys(objectNodes)) {
             if (node.includes('Detail')) {
               const objectGeometry = new THREE.BufferGeometry() // новая буфергеометрия для mesh
@@ -60,57 +53,48 @@ export const AssembledProvider = ({ snap, children }) => {
               objectGeometry.userData.obb = new OBB().fromBox3(
                 objectGeometry.boundingBox // пишем в userData геометрии новый OBB созданный из его коробки
               )
+              objectGeometry.userData.originalMaterialName = objectNodes[node].userData.originalMaterialName
               
               detailsArray.push(objectGeometry)
               const detailIndex = detailsArray.length - 1
-              const matArray = [
-                  ...textures.map((texture) => texture.clone()),
-                  objectNodes[node].material.clone()
-                ]
-              let detailMaterial = {}
-              if (instruction.material[detailIndex]) {
-                detailMaterial = Object.assign({}, matArray.filter(
-                  (mat) => mat.name == instruction.material[detailIndex]
-                )[0])
-              } else {
-                detailMaterial = objectNodes[node].material.clone()
+              let detailMaterial = materials.filter(
+                (mat) => mat.name == (instruction.material[detailIndex] ? 
+                instruction.material[detailIndex] : objectNodes[node].userData.originalMaterialName)
+              )[0].clone()
+              if (instruction.scale) {
+                const u = instruction.scale[1]
+                const v = instruction.scale[0]
+                console.log('UV', u, v)
+                detailMaterial.map && detailMaterial.map.repeat.set(u, v)
+                detailMaterial.normalMap && detailMaterial.normalMap.repeat.set(u, v)
+                detailMaterial.roughnessMap && detailMaterial.roughnessMap.repeat.set(u, v)
+                detailMaterial.aoMap && detailMaterial.aoMap.repeat.set(u, v)
+                detailMaterial.map && (
+                  () => 
+                    detailMaterial.map.wrapS = 
+                    detailMaterial.map.wrapT = 
+                    THREE.RepeatWrapping
+                  )
+                detailMaterial.normalMap && (
+                  () => 
+                    detailMaterial.normalMap.wrapS = 
+                    detailMaterial.normalMap.wrapT = 
+                    THREE.RepeatWrapping
+                  )
+                detailMaterial.roughnessMap && (
+                  () => 
+                    detailMaterial.roughnessMap.wrapS = 
+                    detailMaterial.roughnessMap.wrapT = 
+                    THREE.RepeatWrapping
+                  )
+                detailMaterial.aoMap && (
+                  () => 
+                    detailMaterial.aoMap.wrapS = 
+                    detailMaterial.aoMap.wrapT = 
+                    THREE.RepeatWrapping
+                  )
               }
-              // if (instruction.scale) {
-              //   console.log('NAME OF MATERIAL - ', detailMaterial.name)
-              //   const u = instruction.scale[1]
-              //   const v = instruction.scale[0]
-              //   console.log('UV', u, v)
-              //   detailMaterial.map && detailMaterial.map.repeat.set(u, v)
-              //   detailMaterial.normalMap && detailMaterial.normalMap.repeat.set(u, v)
-              //   detailMaterial.roughnessMap && detailMaterial.roughnessMap.repeat.set(u, v)
-              //   detailMaterial.aoMap && detailMaterial.aoMap.repeat.set(u, v)
-              //   detailMaterial.map && (
-              //     () => 
-              //       detailMaterial.map.wrapS = 
-              //       detailMaterial.map.wrapT = 
-              //       THREE.RepeatWrapping
-              //     )
-              //   detailMaterial.normalMap && (
-              //     () => 
-              //       detailMaterial.normalMap.wrapS = 
-              //       detailMaterial.normalMap.wrapT = 
-              //       THREE.RepeatWrapping
-              //     )
-              //   detailMaterial.roughnessMap && (
-              //     () => 
-              //       detailMaterial.roughnessMap.wrapS = 
-              //       detailMaterial.roughnessMap.wrapT = 
-              //       THREE.RepeatWrapping
-              //     )
-              //   detailMaterial.aoMap && (
-              //     () => 
-              //       detailMaterial.aoMap.wrapS = 
-              //       detailMaterial.aoMap.wrapT = 
-              //       THREE.RepeatWrapping
-              //     )
-              // }
               detailsMaterialArray.push(detailMaterial)
-              detailsDefaultMaterialArray.push(objectNodes[node].material.clone())
             }
           }
           meshOBB.push(detailsArray.reduce((acc, _val) => acc = [...acc, {obb: new OBB()}], []))
@@ -139,10 +123,9 @@ export const AssembledProvider = ({ snap, children }) => {
           }
           objectGeometryArray.push(detailsArray) // записали
           objectMaterialArray.push(detailsMaterialArray) // ССЫЛКА на материал
-          objectDefaultMaterialArray.push(detailsDefaultMaterialArray)
         })
       }
-      return {userDataArray, objectGeometryArray, objectMaterialArray, meshOBB, textures, objectDefaultMaterialArray}
+      return {userDataArray, objectGeometryArray, objectMaterialArray, meshOBB}
   }
     
   const positions = (assemblyMap, userDataArray, objectGeometryArray) => {
@@ -212,7 +195,7 @@ export const AssembledProvider = ({ snap, children }) => {
     return {assemblyMap, freeCons}
   }
 
-    const setObjectArray = useMemo(() => objectArray(objects), [stateString])
+    const setObjectArray = useMemo(() => objectArray(objects, materials), [stateString])
     
     const setPositions = useMemo(() => positions(
       JSON.parse(JSON.stringify(snap.assemblyMap)), 
@@ -222,9 +205,8 @@ export const AssembledProvider = ({ snap, children }) => {
       stateString: stateString,
       assemblyMap: setPositions.assemblyMap,
       freeCons: setPositions.freeCons,
-      setObjectArray: setObjectArray
+      setObjectArray: setObjectArray,
     }
-    console.log('ASSEMBLED CONTEXT - ', assembledObj)
 
   return (
     <AssembledContext.Provider value={assembledObj}>

@@ -12,8 +12,9 @@ import * as TWEEN from '@tweenjs/tween.js'
 import appState from '../store'
 import { useFrame } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
+import { useObjects } from '../contexts'
 
-const Model = ({ name, positionCorrection, size, textureName, textureDefault, textures, setObjectState }) => {
+const Model = ({ name, positionCorrection, size, textureName, textureDefault, setObjectState }) => {
   
   const materialSpheres = useRef([])
   const closeButton = useRef()
@@ -28,7 +29,11 @@ const Model = ({ name, positionCorrection, size, textureName, textureDefault, te
 
   const [clicked, setClicked] = useState({name: null})
 
+  const {materials} = useObjects()
 
+  console.log(materials.filter((material) => 
+    material.name.toLowerCase().includes('jut') == name.includes('jut')
+  ))
   useFrame(() => {
     TWEEN.update()
   })
@@ -150,7 +155,9 @@ const Model = ({ name, positionCorrection, size, textureName, textureDefault, te
     <group
       name={'materialsCatalogue'}
     >
-      {textures && [...textures, textureDefault].map((material, i, arr) => (
+      {materials && [...materials].filter((material) => 
+          material.name.toLowerCase().includes('jut') == name.includes('jut')
+        ).map((material, i, arr) => (
         <Select
           key={`${material.name}/${i}`}
           enabled={
@@ -172,7 +179,7 @@ const Model = ({ name, positionCorrection, size, textureName, textureDefault, te
           >
             <sphereGeometry args={[0.05, 16, 16]} />
             <meshStandardMaterial 
-              {...material}
+              {...material.clone()}
             />
           </mesh>
           {(i == (arr.length - 1) && materialSpheres.current[i] && labelPosition) &&
@@ -214,8 +221,9 @@ const Model = ({ name, positionCorrection, size, textureName, textureDefault, te
 }
 
 
-const MaterialChanger = ({ position, name, textureCurrent, textureDefault, textures, size, setObjectState }) => {
+const MaterialChanger = ({ position, name, textureCurrent, textureDefault, size, setObjectState }) => {
 
+  
   console.log('MATERIALCHANGER')
   return (
     <Selection 
@@ -234,7 +242,6 @@ const MaterialChanger = ({ position, name, textureCurrent, textureDefault, textu
         size = {size}
         textureName = {textureCurrent}
         textureDefault = {textureDefault}
-        textures = {textures}
         setObjectState = {setObjectState}
       />
     </Selection>

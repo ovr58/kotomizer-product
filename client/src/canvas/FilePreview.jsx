@@ -3,7 +3,7 @@ import { ErrorBoundary, useErrorBoundary } from 'react-error-boundary'
 import { CanvasLoader } from '../components';
 import { Image as  DreiImage, OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { getDistance, reader } from '../config/helpers';
-import { TextureProvider, useTextures } from '../contexts/TextureContext';
+import { ObjectsProvider, useObjects } from '../contexts/ObjectsContext';
 import { AssembledProvider, useAssembled } from '../contexts/AssembledContext';
 import { Canvas } from '@react-three/fiber';
 
@@ -20,7 +20,6 @@ const PreviewAssembled = ({ setDist }) => {
   const detailsPreview = useRef([])
 
   const assembledObj = useAssembled()
-  const textures = useTextures()
 
   useEffect(() => {
     if (previewAssembled.current) {
@@ -52,13 +51,7 @@ const PreviewAssembled = ({ setDist }) => {
                   geometry={detailOfGroup}
                   visible={true}
                 >
-                  <meshStandardMaterial {
-                    ...(instruction.material[iOfDetail] ? 
-                    [...textures, assembledObj.setObjectArray.objectMaterialArray[i][iOfDetail]].filter(
-                      material => material.name == instruction.material[iOfDetail]
-                    )[0] :
-                    assembledObj.setObjectArray.objectMaterialArray[i][iOfDetail])} 
-                  /> 
+                  <meshPhysicalMaterial {...assembledObj.setObjectArray.objectMaterialArray[i][iOfDetail]} />
                 </mesh>
               ))}
             </group>
@@ -129,11 +122,11 @@ const FilePreview = ({file, setFile}) => {
               <DreiImage url={fileData} position={[0,dist.height,0]} rotation={[0,Math.PI/4,0]} scale={imgScale}/>
             : 
               renderWhat == 'map' ? 
-              <TextureProvider>
+              <ObjectsProvider>
                 <AssembledProvider snap = {{assemblyMap: fileData}}>
                   <PreviewAssembled setDist={setDist} />
                 </AssembledProvider>
-              </TextureProvider> : null
+              </ObjectsProvider> : null
             }
           </ErrorBoundary>
       </Canvas>

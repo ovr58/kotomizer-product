@@ -416,14 +416,6 @@ useEffect(() => {
         name={objectToChange.name}
         textureCurrent = {objectToChange.textureCurrent}
         textureDefault = {objectToChange.textureDefault}
-        textures = {assembledObj.setObjectArray.textures.
-          map(
-            (texture) => texture.clone()
-          ).
-          filter(
-          (texture) => (objectToChange.name.includes('jut') === texture.name.includes('Jut')
-            )
-        )}
         size={getPartSize(groupAssembled.current)}
         setObjectState={setObjectToChange}
       /> 
@@ -467,12 +459,12 @@ useEffect(() => {
                         name: e.object.name,
                         position: e.object.userData.obb.center.toArray(),
                         textureCurrent: e.object.material.name,
-                        textureDefault: assembledObj.setObjectArray.objectDefaultMaterialArray[i][iOfDetail],
+                        textureDefault: assembledObj.setObjectArray.objectGeometryArray[i][iOfDetail].userData.originalMaterialName,
                       }), appState.camRotation = false
                     ))}
                 >
                   {instruction.id>=0 ? 
-                    <meshStandardMaterial {...assembledObj.setObjectArray.objectMaterialArray[i][iOfDetail]} /> :
+                    <meshPhysicalMaterial {...assembledObj.setObjectArray.objectMaterialArray[i][iOfDetail]} /> :
                     <meshBasicMaterial 
                       {...new THREE.MeshBasicMaterial({ opacity: 0.5, transparent: true, color: new THREE.Color(7, 0, 0.5), toneMapped: false })}
                     />

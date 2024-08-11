@@ -1,8 +1,6 @@
-import { TextureProvider } from "./TextureContext"
-import { useTextures } from "./TextureContext"
 import { AssembledProvider } from "./AssembledContext"
 import { useAssembled } from "./AssembledContext"
-import { ObjectsContextProvider } from "./ObjectContext"
-import { useObjects } from "./ObjectContext"
+import { ObjectsProvider } from "./ObjectsContext"
+import { useObjects } from "./ObjectsContext"
 
-export { TextureProvider, useTextures, AssembledProvider, useAssembled, ObjectsContextProvider, useObjects }
+export { AssembledProvider, useAssembled, ObjectsProvider, useObjects }

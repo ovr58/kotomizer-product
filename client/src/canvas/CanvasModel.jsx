@@ -5,7 +5,7 @@ import { Canvas } from '@react-three/fiber'
 import Assembled from './Assembled'
 import { Image as  DreiImage, OrbitControls, PerspectiveCamera, TransformControls } from '@react-three/drei'
 import { AssembledProvider } from '../contexts/AssembledContext'
-import { TextureProvider } from '../contexts/TextureContext'
+import { ObjectsProvider } from '../contexts'
 import { useSnapshot } from 'valtio'
 import appState from '../store'
 
@@ -41,11 +41,11 @@ const CanvasModel = () => {
         position = {[dist, height, dist]} 
         fov={25}
         />
-      <TextureProvider>
+      <ObjectsProvider>
         <AssembledProvider snap={{assemblyMap: JSON.parse(JSON.stringify(assemblyMap))}}>
             <Assembled />
         </AssembledProvider>
-      </TextureProvider>
+      </ObjectsProvider>
       {snap.backgroundObj.backgroundImg &&
       <>
         {transformMode != 'none' ? 

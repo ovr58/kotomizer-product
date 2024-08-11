@@ -17,7 +17,6 @@ import { useThree } from '@react-three/fiber'
 import { Parts } from '../config/constants'
 import MaterialChanger from '../components/MaterialChanger'
 
-import { useTextures } from '../contexts/TextureContext';
 
 
 const Assembled = ({ setDist }) => {
@@ -27,7 +26,7 @@ const Assembled = ({ setDist }) => {
   // грузим все объекты из каталога
   const objects = useMemo(() => Parts.map((part) => useGLTF(`/${part.name}.glb`)), [Parts.toString()])
   
-  const textures = useTextures()
+  const s = useTextures()
   // возвращаем массивы объектов и материалов для каждой инструкции в карте сборки
   // ref на группу
   const groupAssembled = useRef()
