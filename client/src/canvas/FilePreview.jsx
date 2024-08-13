@@ -3,7 +3,7 @@ import { ErrorBoundary, useErrorBoundary } from 'react-error-boundary'
 import { CanvasLoader } from '../components';
 import { Image as  DreiImage, OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { getDistance, reader } from '../config/helpers';
-import { ObjectsProvider, useObjects } from '../contexts/ObjectsContext';
+import { ObjectsProvider } from '../contexts/ObjectsContext';
 import { AssembledProvider, useAssembled } from '../contexts/AssembledContext';
 import { Canvas } from '@react-three/fiber';
 
@@ -39,13 +39,13 @@ const PreviewAssembled = ({ setDist }) => {
               name={`${instruction.id}/${instruction.name}/${instruction.type}/details/preview` } //использовать для получения типа
               position={instruction.position}
               rotation={instruction.rotation}
-              scale={instruction.scale || [1,1,1]}
             >
               {assembledObj.setObjectArray.objectGeometryArray[i].map((detailOfGroup, iOfDetail) => (
                 <mesh
                   ref={(el) => (detailsPreview.current[Number(`${i}${iOfDetail}`)] = el)}  
                   key={`${Math.abs(instruction.id)}/${iOfDetail}/preview`}
                   name={`${i}/${iOfDetail}/${instruction.type}/preview`}
+                  scale={instruction.scale || [1,1,1]}
                   castShadow 
                   receiveShadow 
                   geometry={detailOfGroup}

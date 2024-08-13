@@ -57,42 +57,43 @@ export const AssembledProvider = ({ snap, children }) => {
               
               detailsArray.push(objectGeometry)
               const detailIndex = detailsArray.length - 1
-              let detailMaterial = materials.filter(
-                (mat) => mat.name == (instruction.material[detailIndex] ? 
-                instruction.material[detailIndex] : objectNodes[node].userData.originalMaterialName)
+              const detailMaterial = materials.filter(
+                (mat) => {
+                  return mat.name == (instruction.material[detailIndex] ? 
+                instruction.material[detailIndex] : objectNodes[node].userData.originalMaterialName)}
               )[0].clone()
-              if (instruction.scale) {
+              if (instruction.type === 'jumper') {
                 const u = instruction.scale[1]
                 const v = instruction.scale[0]
                 console.log('UV', u, v)
-                detailMaterial.map && detailMaterial.map.repeat.set(u, v)
-                detailMaterial.normalMap && detailMaterial.normalMap.repeat.set(u, v)
-                detailMaterial.roughnessMap && detailMaterial.roughnessMap.repeat.set(u, v)
-                detailMaterial.aoMap && detailMaterial.aoMap.repeat.set(u, v)
-                detailMaterial.map && (
-                  () => 
-                    detailMaterial.map.wrapS = 
-                    detailMaterial.map.wrapT = 
-                    THREE.RepeatWrapping
-                  )
-                detailMaterial.normalMap && (
-                  () => 
-                    detailMaterial.normalMap.wrapS = 
-                    detailMaterial.normalMap.wrapT = 
-                    THREE.RepeatWrapping
-                  )
-                detailMaterial.roughnessMap && (
-                  () => 
-                    detailMaterial.roughnessMap.wrapS = 
-                    detailMaterial.roughnessMap.wrapT = 
-                    THREE.RepeatWrapping
-                  )
-                detailMaterial.aoMap && (
-                  () => 
-                    detailMaterial.aoMap.wrapS = 
-                    detailMaterial.aoMap.wrapT = 
-                    THREE.RepeatWrapping
-                  )
+                if (detailMaterial.map) {
+                  detailMaterial.map = detailMaterial.map.clone()
+                  detailMaterial.map.repeat.set(u, v)
+                  detailMaterial.map.wrapS = 
+                  detailMaterial.map.wrapT = 
+                  THREE.RepeatWrapping
+                }
+                if (detailMaterial.normalMap) {
+                  detailMaterial.normalMap = detailMaterial.normalMap.clone()
+                  detailMaterial.normalMap.repeat.set(u, v)
+                  detailMaterial.normalMap.wrapS = 
+                  detailMaterial.normalMap.wrapT = 
+                  THREE.RepeatWrapping
+                }
+                if (detailMaterial.roughnessMap) {
+                  detailMaterial.roughnessMap = detailMaterial.roughnessMap.clone()
+                  detailMaterial.roughnessMap.repeat.set(u, v)
+                  detailMaterial.roughnessMap.wrapS = 
+                  detailMaterial.roughnessMap.wrapT = 
+                  THREE.RepeatWrapping
+                }
+                if (detailMaterial.aoMap) {
+                  detailMaterial.aoMap = detailMaterial.aoMap.clone()
+                  detailMaterial.aoMap.repeat.set(u, v)
+                  detailMaterial.aoMap.wrapS = 
+                  detailMaterial.aoMap.wrapT = 
+                  THREE.RepeatWrapping
+                }
               }
               detailsMaterialArray.push(detailMaterial)
             }

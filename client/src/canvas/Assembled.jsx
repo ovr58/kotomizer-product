@@ -66,7 +66,6 @@ const findIntersections = () => {
   details.current.forEach((detail) => {
     if (detail) {
       if (detail.type == 'Mesh') { // нужны только mesh
-        console.log('SET FOR MESH')
         const detailBBCeneter = new THREE.Vector3()
         detail.geometry.computeBoundingBox()
         detail.geometry.userData.obb.fromBox3(
@@ -94,7 +93,6 @@ const findIntersections = () => {
     }
   })
   setHelpersBoxes(helpersBoxesArray)
-  console.log(helpersBoxesArray)
   return intersections
 }
 
@@ -298,7 +296,7 @@ const placeOnEdge = (e) => {
     connector: {name: 'jumper1start'},
     position: [0, 0, 0]
   }
-// если в массиве точек только одна запись (один объект с точками) будем записывать второй и запускать placeJumperOnPosition
+// если в массиве точек одна запись (один объект с точками) будем записывать второй и запускать placeJumperOnPosition
   if (pointsArray.length === 1) {
     // если в массиве точек еще нет данного имени объекта добавляем новый объект с точками ребер
     if (!pointsArray[0].hasOwnProperty(pointName)) {
@@ -432,7 +430,6 @@ useEffect(() => {
               name={`${instruction.id}/${instruction.name}/${instruction.type}/details` } //использовать для получения типа
               position={instruction.position}
               rotation={instruction.rotation}
-              scale={instruction.scale ? instruction.scale : [1,1,1]}
               castShadow 
               receiveShadow
             >
@@ -447,6 +444,7 @@ useEffect(() => {
         // работаем с материалом либо назначаем светящийся
                   userData={assembledObj.setObjectArray.meshOBB[i][iOfDetail]}
                   visible={true}
+                  scale={instruction.scale ? instruction.scale : [1,1,1]}
                   onPointerMove={placedDetail.current[0] && placedDetail.current[0].name.includes('jumper') ? 
                     (e) => (e.stopPropagation(), highlightEdge(e)) : null}
                   onPointerOut={placedDetail.current[0] && placedDetail.current[0].name.includes('jumper') ? 
@@ -458,13 +456,16 @@ useEffect(() => {
                       setObjectToChange({
                         name: e.object.name,
                         position: e.object.userData.obb.center.toArray(),
-                        textureCurrent: e.object.material.name,
+                        textureCurrent: `${e.object.material.name}`,
                         textureDefault: assembledObj.setObjectArray.objectGeometryArray[i][iOfDetail].userData.originalMaterialName,
                       }), appState.camRotation = false
                     ))}
                 >
                   {instruction.id>=0 ? 
-                    <meshPhysicalMaterial {...assembledObj.setObjectArray.objectMaterialArray[i][iOfDetail]} /> :
+                    <meshPhysicalMaterial 
+                      key={uuidv4()}
+                      {...assembledObj.setObjectArray.objectMaterialArray[i][iOfDetail]} 
+                    /> :
                     <meshBasicMaterial 
                       {...new THREE.MeshBasicMaterial({ opacity: 0.5, transparent: true, color: new THREE.Color(7, 0, 0.5), toneMapped: false })}
                     />

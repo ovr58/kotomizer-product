@@ -31,9 +31,6 @@ const Model = ({ name, positionCorrection, size, textureName, textureDefault, se
 
   const {materials} = useObjects()
 
-  console.log(materials.filter((material) => 
-    material.name.toLowerCase().includes('jut') == name.includes('jut')
-  ))
   useFrame(() => {
     TWEEN.update()
   })
@@ -84,7 +81,6 @@ const Model = ({ name, positionCorrection, size, textureName, textureDefault, se
               }, 1000
             ).easing(TWEEN.Easing.Cubic.Out).start().onStart(() => {
               if (i == (count - 1)) {
-                console.log('start prev position set to - ', [positionCorrection])
                 setPrevPosition(positionCorrection)
                 
               }
@@ -130,7 +126,6 @@ const Model = ({ name, positionCorrection, size, textureName, textureDefault, se
           }).onComplete(() => {
             if (i == (count - 1)) {
               if (clicked.name) {
-                console.log(clicked.name)
                 const partIndex = name.split('/')[0]
                 const groupIndex = name.split('/')[1]
                 appState.assemblyMap[partIndex].material[groupIndex] = clicked.name
@@ -178,8 +173,8 @@ const Model = ({ name, positionCorrection, size, textureName, textureDefault, se
             onPointerMissed={(e) => (e.stopPropagation(), setOpenState(false))}
           >
             <sphereGeometry args={[0.05, 16, 16]} />
-            <meshStandardMaterial 
-              {...material.clone()}
+            <meshPhysicalMaterial 
+              {...material}
             />
           </mesh>
           {(i == (arr.length - 1) && materialSpheres.current[i] && labelPosition) &&
