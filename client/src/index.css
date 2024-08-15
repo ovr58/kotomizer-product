@@ -69,6 +69,10 @@ html {
   @apply select-none absolute left-full ml-3 glassmorphism p-3 w-[400px] h-[400px] rounded-md flex flex-col gap-4;
 }
 
+.orderdetail-container {
+  @apply absolute right-0 ml-3 glassmorphism p-3 w-[400px] h-[400px] rounded-md flex flex-col gap-4;
+}
+
 .filepicker-label {
   @apply border border-gray-300 py-1.5 px-2 rounded-md shadow-sm text-xs text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 cursor-pointer w-fit;
 }

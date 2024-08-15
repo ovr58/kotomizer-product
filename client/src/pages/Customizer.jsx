@@ -9,7 +9,7 @@ import { EditorTabs, TransformTabs, Parts, alerts } from '../config/constants'
 
 import { fadeAnimation, slideAnimation } from '../config/motion'
 
-import {CustomButton, ColorPicker, FilePicker, PartsPicker, Tab} from '../components'
+import {CustomButton, ColorPicker, FilePicker, PartsPicker, Tab, OrderDetail} from '../components'
 import { Vector3 } from 'three'
 
 const Customizer = () => {
@@ -426,13 +426,15 @@ const Customizer = () => {
     if (hasNimbedPart && freeConsToPlace[0]) {
       console.log(freeConsToPlace)
       // если номер свободного коннектора больше последнего из всех свободных коннекторов то назначим первый из свободных
-      const idArr = freeConsToPlace.map((freeCon) => freeCon.id)
-      let currIndex = idArr.indexOf(placedDetail.connectedTo[0].id)
+      const idArr = freeConsToPlace.map((freeCon) => `${freeCon.id}${freeCon.conName}`)
+      const currPosition = `${placedDetail.connectedTo[0].id}${placedDetail.connectedTo[0].connector.name}`
+      let currIndex = idArr.indexOf(currPosition)
       let nextIndex = (currIndex + 1) > (freeConsToPlace.length - 1) ? 0 : currIndex + 1
       appState.assemblyMap[index].connectedTo = [{
         id: freeConsToPlace[nextIndex].id,
         connector: {name: freeConsToPlace[nextIndex].conName}
       }]
+      console.log(freeConsToPlace[nextIndex])
       // если этот коннектор последний то назначим номер нулем иначе следующим номером свободного коннектора
       // countIndex + 1 > freeConsToPlace.length - 1 ? setConNumber(0) : setConNumber(conNumber + 1) 
     } else if (hasNimbedPart) {
@@ -520,6 +522,13 @@ const Customizer = () => {
   return (
     <AnimatePresence key = {'customizerPage'}>
       <motion.div
+        key='orderDetailTab'
+        className='absolute top-[60px] right-0 z-10'
+        {...slideAnimation('right')}
+      >
+        <OrderDetail />
+      </motion.div>
+      <motion.div
         key='customTabContent'
         className='absolute top-0 left-0 z-10'
         {...slideAnimation('left')}
@@ -567,6 +576,7 @@ const Customizer = () => {
               />
             ))}
       </motion.div>
+      
     </AnimatePresence>
   )
 }

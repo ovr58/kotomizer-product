@@ -2,6 +2,12 @@ import { Vector3, Box3 } from "three"
 import * as THREE from 'three'
 
 export const downloadFile = (elementName, cpiData) => {
+  console.log('DOWNLOAD - ', cpiData)
+  if (cpiData === 'getImg') {
+    const element = document.querySelector(`.${elementName} canvas`)
+    const dataURL = element.toDataURL()
+    return dataURL
+  }
   const link = document.createElement("a")
   if (elementName == 'mainCanvas') {
     const element = document.querySelector(`.${elementName} canvas`)
@@ -10,8 +16,8 @@ export const downloadFile = (elementName, cpiData) => {
     link.download = `${elementName}.png`
   } else {
     const blob = new Blob([cpiData], { type: 'text/plain' })
-    const url = URL.createObjectURL(blob)
-    link.href = url
+    const dataURL = URL.createObjectURL(blob)
+    link.href = dataURL
     link.download = `${elementName}.cpi`
   }
   document.body.appendChild(link)

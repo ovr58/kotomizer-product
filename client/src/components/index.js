@@ -9,6 +9,7 @@ import PartsPicker from "./PartsPicker";
 import MaterialChanger from "./MaterialChanger";
 import CanvasLoader from "./CanvasLoader";
 import HelpersBoxes from "./HelperBoxes";
+import OrderDetail from "./OrderDetail";
 
 export { 
     KnobControl, 
@@ -20,5 +21,6 @@ export {
     FilePicker, 
     Tab, 
     CanvasLoader,
-    HelpersBoxes
+    HelpersBoxes,
+    OrderDetail
  }
