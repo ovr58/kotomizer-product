@@ -48,6 +48,7 @@ const Customizer = () => {
   const hasBackgroundMode = snap.backgroundObj.mode
 
   const [file, setFile] = useState(null)
+  const [orderPage, setOrderPage] = useState(false)
 // функция для получения свойства поворачиваемости из каталога деталей
   const isRotatable = (partName) => {
 
@@ -524,7 +525,7 @@ const Customizer = () => {
       <motion.div
         key='orderDetailTab'
         className='absolute top-[60px] right-0 z-10'
-        {...slideAnimation('right')}
+        {...slideAnimation('right', orderPage ? '' : 'close')}
       >
         <OrderDetail />
       </motion.div>
@@ -554,10 +555,19 @@ const Customizer = () => {
         {...fadeAnimation}
       >
         <CustomButton 
-          type='filled'
-          title='Go Back'
-          handleClick={() => appState.intro = true}
+          key='OrderButton'
+          type={orderPage ? 'filled' : 'outline'}
+          title='Заказ'
+          handleClick={() => setOrderPage(!orderPage)}
           customStyles='w-fit px-4 py-2.5 font-bold text-sm'
+        />
+
+        <CustomButton 
+          key='mainPageButton'
+          type='filled'
+          title='На главную'
+          handleClick={() => appState.intro = true}
+          customStyles='w-fit px-4 py-2.5 font-bold text-sm ml-5'
         />
       </motion.div>
 

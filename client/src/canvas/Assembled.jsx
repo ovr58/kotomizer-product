@@ -220,6 +220,7 @@ const placeJumperOnPosition = (pointsArray) => {
           ).filter(
             (obj) => !obj.object.name.includes('-')
           )
+      console.log('INTERSECTS - ', intersects)
 // если ничего не осталось ничего в массиве продолжим
     if (intersects.length === 0) {
 // определяем вектора направлений по координатным осям
@@ -437,7 +438,7 @@ useEffect(() => {
                 <mesh
                   ref={instruction.id<0 ? ((el) => (placedDetail.current[iOfDetail] = el)) : ((el) => (details.current[Number(`${i}${iOfDetail}`)] = el))} //если id отрицательный - назначаем ссылку 
                   key={`${instruction.id}/${iOfDetail}`}
-                  name={`${i}/${iOfDetail}/${instruction.type}`}
+                  name={`${i}/${iOfDetail}/${instruction.id}/${instruction.type}`}
                   castShadow 
                   receiveShadow 
                   geometry={detailOfGroup}

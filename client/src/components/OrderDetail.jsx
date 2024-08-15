@@ -3,19 +3,27 @@ import { downloadFile } from '../config/helpers';
 import CustomButton from './CustomButton';
 import { useSnapshot } from 'valtio';
 import appState from '../store';
+import { Parts } from '../config/constants';
 
 function OrderDetail() {
 
   const [ img, setImg ] = useState(null)
   const [ price, setPrice ] = useState(0)
-  const [ tableContent, setTableContent ] = useState('')
+  const [ tableContent, setTableContent ] = useState({})
 
   const snap = useSnapshot(appState)
   useEffect(() => {
-    snap.assemblyMap.forEach((instruction) => {
-
+    let tableObj = {}
+    let totalPrice = 0
+    snap.assemblyMap.forEach((instruction, i) => {
+      const description = `${Parts[instruction.name].description} Материал: ${instruction.material.name || 'стандарт'}`
+      const detailPrice = Parts[instruction.name].price * (instruction.scale ? instruction.scale[0]*instruction.scale[1] : 1)
+      tableObj[i] = [description, detailPrice.toFixed(2)]
+      totalPrice += Math.round(100*detailPrice)/100
     })
-  }, [])
+    setPrice(totalPrice)
+    setTableContent(tableObj)
+  }, [snap.assemblyMap])
   console.log('RENDERED - ORDER CARD')
   useEffect(() => {
 
@@ -24,11 +32,11 @@ function OrderDetail() {
   }, [])
 
   return (
-    <div className="orderdetail-container scroll-auto">
-      <div className="relative w-full md:w-48 flex justify-between items-center">
+    <div className="orderdetail-container">
+      <div className="flex flex-col w-full justify-between items-center">
         {
           img && <img src={img} alt="shopping image"
-            className="object-cover w-full h-48 md:h-full rounded-t-lg md:rounded-l-lg md:rounded-t-none" />
+            className="h-auto rounded-t-lg" />
         }
         <div className="text-xl text-center font-semibold text-red-500">{`Стоимость - ${price} руб.`}</div>
       </div>
@@ -50,24 +58,18 @@ function OrderDetail() {
                   </tr>
               </thead>
               <tbody>
-                <tr className="bg-white border-b">
-                    <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                        Apple MacBook Pro 17"
-                    </th>
-                    <td className="px-6 py-4">
-                        Silver
-                    </td>
-                    
-                </tr>
-                <tr className="bg-white border-b">
-                    <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                        Microsoft Surface Pro
-                    </th>
-                    <td className="px-6 py-4">
-                        $1999
-                    </td>
-                </tr>
-              </tbody>
+                {Object.keys(tableContent).map((key, i) => (
+                  <tr className="bg-white border-b">
+                      <th scope="row" className="px-6 py-4 font-medium text-gray-900 wrap">
+                          {tableContent[key][0]}
+                      </th>
+                      <td className="px-6 py-4">
+                          {`Р${tableContent[key][1]}`}
+                      </td>
+                      
+                  </tr>
+                ))}
+             </tbody>
             </table>
           </div>                
         <div className="flex w-full justify-center aign-center m-4 text-sm font-medium">

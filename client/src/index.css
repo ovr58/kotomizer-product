@@ -70,7 +70,7 @@ html {
 }
 
 .orderdetail-container {
-  @apply absolute right-0 ml-3 glassmorphism p-3 w-[400px] h-[400px] rounded-md flex flex-col gap-4;
+  @apply absolute right-0 ml-3 glassmorphism p-3 w-[400px] h-[400px] rounded-md flex flex-col gap-4 overflow-x-auto;
 }
 
 .filepicker-label {

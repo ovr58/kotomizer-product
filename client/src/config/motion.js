@@ -1,6 +1,6 @@
 export const transition = { type: "spring", duration: 0.8 };
 
-export const slideAnimation = (direction) => {
+export const slideAnimation = (direction, status) => {
   return {
     initial: {
       x: direction === "left" ? -100 : direction === "right" ? window.innerWidth+100 : 0,
@@ -9,15 +9,15 @@ export const slideAnimation = (direction) => {
       transition: { ...transition, delay: 0.5 },
     },
     animate: {
-      x:  0,
+      x:  status == 'close' ? window.innerWidth+100 :  0,
       y:  0,
       opacity: 1,
-      transition: { ...transition, delay: 0 },
+      transition: { ...transition, delay: 1 },
     },
     exit: {
       x: direction === "left" ? -100 : direction === "right" ? window.innerWidth : 0,
       y: direction === "up" ? 100 : direction === "down" ? -100 : 0,
-      transition: { ...transition, delay: 0 },
+      transition: { ...transition, delay: 2 },
     },
   };
 };
@@ -29,11 +29,11 @@ export const fadeAnimation = {
   },
   animate: {
     opacity: 1,
-    transition: { ...transition, delay: 0 },
+    transition: { ...transition, delay: 0.5 },
   },
   exit: {
     opacity: 0,
-    transition: { ...transition, delay: 0 },
+    transition: { ...transition, delay: 0.5 },
   },
 };
 
