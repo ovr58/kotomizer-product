@@ -23,10 +23,10 @@ const FilePicker = ({ file, setFile, handleDownLoad }) => {
         <label
           htmlFor='file-upload' className='filepicker-label'
         >
-          Upload File
+          Загрузить...
         </label>
 
-        <p>{file ? file.name : "No file selected"}</p>
+        <p>{file ? file.name : "Загрузите файл фона или модель..."}</p>
       </div>
       
       {file &&
@@ -36,26 +36,26 @@ const FilePicker = ({ file, setFile, handleDownLoad }) => {
       <div className='mt-4 flex flex-wrap gap-3'>
         <CustomButton 
           type={file && file.type != 'image/jpeg' ? "filled" : "blocked"}
-          title="Upload The Model"
+          title="Загрузить модель"
           handleClick={() => handleDownLoad('Upload The Cat Post', file)}
           customStyles='text-xs'
         />
         <CustomButton 
           type={file && file.type == 'image/jpeg' ? "filled" : "blocked"}
-          title="Set The Background"
+          title="Установить фон"
           handleClick={() => handleDownLoad('Set Background', file)}
           customStyles='text-xs'
           // добавить подсказки
         />
         <CustomButton 
           type="filled"
-          title="Save The Cat Post"
+          title="Сохранить модель"
           handleClick={() => handleDownLoad('Save The Cat Post')}
           customStyles='text-xs'
         />
         <CustomButton 
           type="filled"
-          title="Photo The Cat Post"
+          title="Скриншот модели"
           handleClick={() => handleDownLoad('Photo The Cat Post')}
           customStyles='text-xs'
         />

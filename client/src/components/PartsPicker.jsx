@@ -173,19 +173,19 @@ function PartsPicker({
       <div className='flex flex-wrap gap-3'>
         <CustomButton 
           type={partPickerButtonsStatus.addButton ? "filled" : "blocked"}
-          title="Add"
+          title="Добавить"
           handleClick={() => {addToMap(clicked)}}
           customStyles='text-xs'
         />
         <CustomButton 
           type={partPickerButtonsStatus.undoButton ? "filled" : "blocked"}
-          title="Undo"
+          title="Отменить"
           handleClick={() => {unDoAdd()}}
           customStyles='text-xs'
         />
         <CustomButton 
           type={partPickerButtonsStatus.deleteLastButton ? "filled" : "blocked"}
-          title="Delete"
+          title="Удалить"
           handleClick={() => {deleteLast()}}
           customStyles='text-xs'
         />
