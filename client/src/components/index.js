@@ -10,6 +10,7 @@ import MaterialChanger from "./MaterialChanger";
 import CanvasLoader from "./CanvasLoader";
 import HelpersBoxes from "./HelperBoxes";
 import OrderDetail from "./OrderDetail";
+import LoginPage from "./LoginPage";
 
 export { 
     KnobControl, 
@@ -22,5 +23,6 @@ export {
     Tab, 
     CanvasLoader,
     HelpersBoxes,
-    OrderDetail
+    OrderDetail,
+    LoginPage
  }

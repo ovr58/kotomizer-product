@@ -1,6 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,wght@0,200;0,600;1,900&display=swap");
 @import url("https://rsms.me/inter/inter.css");
 
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -69,8 +70,8 @@ html {
   @apply select-none absolute left-full ml-3 glassmorphism p-3 w-[400px] h-[400px] rounded-md flex flex-col gap-4;
 }
 
-.orderdetail-container {
-  @apply absolute right-0 ml-3 glassmorphism p-3 w-[400px] h-[400px] rounded-md flex flex-col gap-4 overflow-x-auto;
+.right-container {
+  @apply absolute right-0 ml-3 glassmorphism p-3 w-[400px] h-[400px] rounded-md flex flex-col gap-4 overflow-y-auto overflow-x-hidden;
 }
 
 .filepicker-label {

@@ -103,7 +103,6 @@ const Model = ({ nodes, setClicked, clicked, setDist, setTargetObj }) => {
             onPointerOver={() => setHover(Parts[name].available ? name : '')}
             onPointerOut={() => setHover('')}
             onPointerDown={() => setClicked(Parts[name].available ? name : '')}
-            dispose={null}
             >
               {Object.entries(nodes[i].nodes).filter((arr) => arr[0].includes('Detail')).map((subMesh) => (
                 <mesh 

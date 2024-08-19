@@ -59,7 +59,8 @@ const appState = proxy({
     distanceToCamera: {dist: 22, height: 1},
     objectToChange: null,
     assembledSize: null,
-    backgroundObj: {}
+    backgroundObj: {},
+    userToken: null
 })
 
 export default appState

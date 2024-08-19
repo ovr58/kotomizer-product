@@ -32,7 +32,7 @@ function OrderDetail() {
   }, [])
 
   return (
-    <div className="orderdetail-container">
+    <div className="right-container">
       <div className="flex flex-col w-full justify-between items-center">
         {
           img && <img src={img} alt="shopping image"
@@ -59,7 +59,7 @@ function OrderDetail() {
               </thead>
               <tbody>
                 {Object.keys(tableContent).map((key, i) => (
-                  <tr className="bg-white border-b">
+                  <tr key={`tRow${i}`} className="bg-white border-b">
                       <th scope="row" className="px-6 py-4 font-medium text-gray-900 wrap">
                           {tableContent[key][0]}
                       </th>

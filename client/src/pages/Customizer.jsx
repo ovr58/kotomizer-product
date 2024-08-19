@@ -18,7 +18,7 @@ const Customizer = () => {
   // глубокое копирование карты сборки
   const assemblyMap = snap.assemblyMap
   const placedDetail = assemblyMap[assemblyMap.length-1]
-  switch (placedDetail.type) {
+  if (placedDetail) {switch (placedDetail.type) {
     case 'jut':
       TransformTabs[2].label = 'заполнить'
       TransformTabs[2].indicator = placedDetail.repeat
@@ -31,7 +31,7 @@ const Customizer = () => {
       TransformTabs[2].label = 'повернуть'
       TransformTabs[2].indicator = `${placedDetail.rotation[1]*180/Math.PI}гр`
       break;
-  }
+  }}
   // свободных коннекторов, номера свободного коннектора для перемещения на него
   const freeCons = snap.freeCons
   // свободные колонны для установки джута - в последствии можно отсевиать по диаметру placedDetail
@@ -447,6 +447,7 @@ const Customizer = () => {
   const placeDetail = () => {
     if (hasNimbedPart) {
       const trueIntersections = intersectedState.filter((state) => state[2])
+      console.log('TRUE INTERSECTIONS -', trueIntersections)
       if (trueIntersections.length<2 && placedDetail.type !== 'jumper') {
         appState.assemblyMap[assemblyMap.length-1].id = -placedDetail.id
         setHasNimbedPart(false)
@@ -457,7 +458,7 @@ const Customizer = () => {
         trueIntersections[0][1].includes('hause') &&
         trueIntersections[1][1].includes('hause')
       ) {
-        placedDetail.id = -placedDetail.id
+        appState.assemblyMap[assemblyMap.length-1].id = -placedDetail.id
         setHasNimbedPart(false)
       } else if (placedDetail.type == 'jumper' && placedDetail.position.toString().replace(/\D/g, '') !== '000') {
         console.log('PLACED DETAI POSITION ', placedDetail.position.toString().replace(/\D/g, ''))
