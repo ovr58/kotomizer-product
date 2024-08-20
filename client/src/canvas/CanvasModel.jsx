@@ -40,7 +40,7 @@ const CanvasModel = () => {
         makeDefault 
         position = {[dist, height, dist]} 
         fov={25}
-        />
+      />
       <ObjectsProvider>
         <AssembledProvider snap={{assemblyMap: JSON.parse(JSON.stringify(assemblyMap))}}>
             <Assembled />

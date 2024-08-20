@@ -18,28 +18,19 @@ const Camerarig = ({ dist, targetObj }) => {
   })
 
   useEffect(() => {
-    controls.current.autoRotate = false
-    new TWEEN.Tween(controls.current.target).to(
-      {
-        x: targetObj[0],
-        y: targetObj[1],
-        z: targetObj[2]
-      },
-      2100
-    ).easing(TWEEN.Easing.Cubic.Out).start()
     new TWEEN.Tween(camera.current.position).to(
       {
-        x: targetObj[0]+Math.sign(targetObj[0])*dist.dist,
+        x: -dist.dist,
         y: dist.height,
-        z: targetObj[2]+Math.sign(targetObj[2])*dist.dist
+        z: -dist.dist
       },
       2000
     ).easing(TWEEN.Easing.Cubic.Out).start()
-  }, [targetObj])
+  }, [dist.dist])
 
   return (
     <>
-      <PerspectiveCamera key='menuCamera' ref={camera} makeDefault position = {[-2.4, 0, 22]} fov={25}/>
+      <PerspectiveCamera key='menuCamera' makeDefault ref={camera} position = {[0, 0, 0]} fov={25}/>
       <OrbitControls
        key='menuOrbitControl'
        ref={controls} 

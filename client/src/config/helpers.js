@@ -75,7 +75,7 @@ export const getContrastingColor = (color) => {
 // считаем дистанцию удаления камеры и поднять камеру на сколько с припуском и в зависимости от fov
 export const getDistance = (parts, padding = 0, fov = 25) => {
 
-  parts = [parts, ...parts.children.filter(part => part.name.includes('details'))]
+  parts = [parts, ...parts.children.filter(part => part.name.toLowerCase().includes('details'))]
 
   const partSizeMax = Math.max(...parts.map((part) => Math.max(...getPartSize(part).toArray()))) + padding
   const fovToRads = fov * ( Math.PI / 180 )

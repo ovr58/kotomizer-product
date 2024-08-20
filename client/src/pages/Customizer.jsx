@@ -523,13 +523,15 @@ const Customizer = () => {
 
   return (
     <AnimatePresence key = {'customizerPage'}>
-      <motion.div
-        key='orderDetailTab'
-        className='absolute top-[60px] right-0 z-10'
-        {...slideAnimation('right', orderPage ? '' : 'close')}
-      >
-        <OrderDetail />
-      </motion.div>
+      {orderPage && 
+        <motion.div
+          key='orderDetailTab'
+          className='absolute top-[60px] right-0 z-10'
+          {...slideAnimation('right', orderPage ? '' : 'close')}
+        >
+          <OrderDetail />
+        </motion.div>
+      }
       <motion.div
         key='customTabContent'
         className='absolute top-0 left-0 z-10'

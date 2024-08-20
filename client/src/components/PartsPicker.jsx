@@ -19,7 +19,7 @@ function PartsPicker({
 
   const freeCons = snap.freeCons.filter((freeCon) => freeCon.id>=0)
 
-  const [ clicked, setClicked ] = useState('')
+  const [ clicked, setClicked ] = useState('part1')
 
   if (freeCons[0] && snap.assemblyMap.length == 0) {
     Object.keys(Parts).forEach(
@@ -42,46 +42,37 @@ function PartsPicker({
   const getClickedIndexChanged = (arrow) => {
     if (clicked != '') {
       const indexOfClicked = Number(clicked.replace('part', '')) - 1
-      const clickedAvailable = Parts[clicked].available
-      console.log(clickedAvailable, indexOfClicked)
-      if (partsAvailable && partsAvailable.length>1 && clickedAvailable) {
+      if (partsAvailable && partsAvailable.length>0) {
         if (arrow == 'right') {
-          if (indexOfClicked < (partsAvailable.length - 1)) {
-            for (let i = (indexOfClicked + 1); i <= (partsAvailable.length - 1); i++) {
-              if (partsAvailable[i] != 'unavailable') {
-                setClicked(partsAvailable[i].filename.split('.')[0].replace('/', ''))
-                return
-              }
-            }
+          const indexOfNeeded = (indexOfClicked) => {
+            return (indexOfClicked + 1) > (partsAvailable.length - 1) ? 0 : (indexOfClicked + 1)
           }
-          setClicked(partsAvailable.filter(
-            (part) => part != 'unavailable'
-          )[0] ? partsAvailable.filter(
-            (part) => part != 'unavailable'
-          )[0].filename.split('.')[0].replace('/', '') : '')
+          let index = indexOfClicked
+          do {
+            index = indexOfNeeded(index)
+            console.log('INDEX -', index, indexOfClicked)
+            if (partsAvailable[index] != 'unavailable') {
+              setClicked(partsAvailable[index].filename.split('.')[0].replace('/', ''))
+              return
+            }
+          } while (index !== indexOfClicked);
           return
         } else if (arrow == 'left') {
-          if (indexOfClicked > 0) {
-            for (let i = (indexOfClicked - 1); i >= 0; i--) {
-              if (partsAvailable[i] != 'unavailable') {
-                setClicked(partsAvailable[i].filename.split('.')[0].replace('/', ''))
-                return
-              }
-            }
+          const indexOfNeeded = (indexOfClicked) => {
+            return (indexOfClicked - 1) <= 0 ? (partsAvailable.length - 1) : (indexOfClicked - 1)
           }
-          setClicked(partsAvailable.filter(
-            (part) => part != 'unavailable'
-          )[0] ? partsAvailable.filter(
-            (part) => part != 'unavailable'
-          )[0].filename.split('.')[0].replace('/', '') : '')
+          let index = indexOfClicked
+          do {
+            index = indexOfNeeded(index)
+            console.log('INDEX -', index)
+            if (partsAvailable[index] != 'unavailable') {
+              setClicked(partsAvailable[index].filename.split('.')[0].replace('/', ''))
+              return
+            }
+          } while (index !== indexOfClicked);
+          return
         }
-      } else if (partsAvailable && partsAvailable.length>0) {
-        setClicked(partsAvailable.filter(
-          (part) => part != 'unavailable'
-        )[0] ? partsAvailable.filter(
-          (part) => part != 'unavailable'
-        )[0].filename.split('.')[0].replace('/', '') : '')
-      }
+      } 
     } 
   }
 
@@ -98,7 +89,7 @@ function PartsPicker({
         </p>
       </div>
       <div className='flex flex-2 flex-wrap left-full h-full'>
-        <PartPreview setClicked={setClicked} clicked={clicked} />
+        <PartPreview clicked={clicked} />
       </div>
       <CustomButton 
           type={"filled"}
