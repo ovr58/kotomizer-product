@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 
 import { Parts } from '../config/constants'
 
@@ -7,6 +7,7 @@ import appState from '../store'
 
 import CustomButton from './CustomButton'
 import PartPreview from '../canvas/PartPreview'
+import { useGLTF } from '@react-three/drei'
 
 function PartsPicker({ 
   partPickerButtonsStatus, 
@@ -19,8 +20,10 @@ function PartsPicker({
 
   const freeCons = snap.freeCons.filter((freeCon) => freeCon.id>=0)
 
-  const [ clicked, setClicked ] = useState('part1')
+  const [ clicked, setClicked ] = useState('')
 
+  const objects = useMemo(() => Object.keys(Parts).map((name) => useGLTF(`/${name}.glb`)), [])
+  console.log('CLICKED - ', clicked)
   if (freeCons[0] && snap.assemblyMap.length == 0) {
     Object.keys(Parts).forEach(
       (name) => Parts[name].type != 'base' ? Parts[name].available = true : Parts[name].available = false)
@@ -40,41 +43,51 @@ function PartsPicker({
   )
   
   const getClickedIndexChanged = (arrow) => {
-    if (clicked != '') {
-      const indexOfClicked = Number(clicked.replace('part', '')) - 1
-      if (partsAvailable && partsAvailable.length>0) {
-        if (arrow == 'right') {
-          const indexOfNeeded = (indexOfClicked) => {
-            return (indexOfClicked + 1) > (partsAvailable.length - 1) ? 0 : (indexOfClicked + 1)
-          }
-          let index = indexOfClicked
+    const indexOfClicked = Number(clicked.replace('part', '')) - 1
+    if (partsAvailable && partsAvailable.length>0) {
+      if (arrow == 'right') {
+        const indexOfNeeded = (indexOfClicked) => {
+          return (indexOfClicked + 1) > (partsAvailable.length - 1) ? 0 : (indexOfClicked + 1)
+        }
+        let index = indexOfClicked
+        if (!partsAvailable.every((part) => part === 'unavailable')) {
           do {
             index = indexOfNeeded(index)
             console.log('INDEX -', index, indexOfClicked)
             if (partsAvailable[index] != 'unavailable') {
               setClicked(partsAvailable[index].filename.split('.')[0].replace('/', ''))
-              return
+              return 'CHANGED RIGHT'
             }
-          } while (index !== indexOfClicked);
-          return
-        } else if (arrow == 'left') {
-          const indexOfNeeded = (indexOfClicked) => {
-            return (indexOfClicked - 1) <= 0 ? (partsAvailable.length - 1) : (indexOfClicked - 1)
-          }
-          let index = indexOfClicked
+          } while (index !== indexOfClicked)
+        }
+        return 'CHANGED RIGHT'
+      } else if (arrow == 'left') {
+        const indexOfNeeded = (indexOfClicked) => {
+          console.log(partsAvailable)
+          return indexOfClicked > 0 ? (indexOfClicked - 1) : (partsAvailable.length - 1) 
+        }
+        let index = indexOfClicked
+        
+        if (!partsAvailable.every((part) => part === 'unavailable')) {
           do {
             index = indexOfNeeded(index)
-            console.log('INDEX -', index)
-            if (partsAvailable[index] != 'unavailable') {
-              setClicked(partsAvailable[index].filename.split('.')[0].replace('/', ''))
-              return
-            }
-          } while (index !== indexOfClicked);
-          return
+              console.log('INDEX -', index)
+              if (partsAvailable[index] != 'unavailable') {
+                setClicked(partsAvailable[index].filename.split('.')[0].replace('/', ''))
+                return
+              }
+          } while (index !== indexOfClicked)
         }
-      } 
+        return
+      }
     } 
   }
+
+  useEffect(() => {
+    clicked === '' && getClickedIndexChanged('right')
+    console.log('EFFECT')
+  }, [])
+
 
   return (
     <div
@@ -89,12 +102,12 @@ function PartsPicker({
         </p>
       </div>
       <div className='flex flex-2 flex-wrap left-full h-full'>
-        <PartPreview clicked={clicked} />
+        {objects[0] && clicked !='' && <PartPreview clicked={clicked} object={objects[Number(clicked.replace('part', ''))-1]} />}
       </div>
       <CustomButton 
           type={"filled"}
           title=""
-          handleClick={() => {getClickedIndexChanged('left')}}
+          handleClick={() => getClickedIndexChanged('left')}
           customStyles='
             absolute top-1/2 
             left-10 
@@ -129,7 +142,7 @@ function PartsPicker({
       <CustomButton 
           type={"filled"}
           title=""
-          handleClick={() => {getClickedIndexChanged('right')}}
+          handleClick={() => getClickedIndexChanged('right')}
           customStyles='
             absolute top-1/2 
             right-10 
@@ -165,19 +178,19 @@ function PartsPicker({
         <CustomButton 
           type={partPickerButtonsStatus.addButton ? "filled" : "blocked"}
           title="Добавить"
-          handleClick={() => {addToMap(clicked)}}
+          handleClick={() => addToMap(clicked, setClicked)}
           customStyles='text-xs'
         />
         <CustomButton 
           type={partPickerButtonsStatus.undoButton ? "filled" : "blocked"}
           title="Отменить"
-          handleClick={() => {unDoAdd()}}
+          handleClick={unDoAdd}
           customStyles='text-xs'
         />
         <CustomButton 
           type={partPickerButtonsStatus.deleteLastButton ? "filled" : "blocked"}
           title="Удалить"
-          handleClick={() => {deleteLast()}}
+          handleClick={() => deleteLast(setClicked)}
           customStyles='text-xs'
         />
       </div>
@@ -186,3 +199,7 @@ function PartsPicker({
 }
 
 export default PartsPicker
+
+Object.keys(Parts).forEach((name) => {
+  useGLTF.preload(`/${name}.glb`)
+})

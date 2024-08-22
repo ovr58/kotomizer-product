@@ -174,7 +174,7 @@ const Customizer = () => {
     setActiveEditorTab('')
   }
 // функция обработки нажатия на копку добавить в палитре деталей
-  const addToMap = (part) => {
+  const addToMap = (part, setClicked) => {
 // передали имя выбранной детали
 // если деталь уже в сцене (статус кнопки отмены трушный) или нет имени детали 
 // вывести сообщение о невозможности добавить деталь
@@ -299,6 +299,7 @@ const Customizer = () => {
         rotation: [0, 0, 0],
         material: {}
       })
+      setClicked(Object.keys(Parts).find((key) => Parts[key].type != 'base'))
       setPartPickerButtonsStatus({
         undoButton: false,
         addButton: true,
@@ -343,7 +344,7 @@ const Customizer = () => {
     
   }
 
-  const deleteLast = () => {
+  const deleteLast = (setClicked) => {
     // функция удаления последней детали которую добавили
     if (partPickerButtonsStatus.undoButton || assemblyMap.length <= 0) {
       alert(alerts.cantDeleteLast.ru)
@@ -351,11 +352,15 @@ const Customizer = () => {
     }
     appState.assemblyMap.pop()
     // если последняя деталь которая осталась с нулевым индексом - меняем статус кнопок
-    assemblyMap.length - 1 == 0 && setPartPickerButtonsStatus({
-      addButton: false,
-      undoButton: false,
-      deleteLastButton: false
-    })
+    if (assemblyMap.length - 1 == 0) {
+      setPartPickerButtonsStatus({
+        addButton: false,
+        undoButton: false,
+        deleteLastButton: false
+      })
+      setClicked(Object.keys(Parts).find((key) => Parts[key].type === 'base'))
+      console.log(getClickedIndexChanged('right'))
+    }
 
   }
 

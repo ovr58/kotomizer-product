@@ -3,7 +3,7 @@ import React, { useRef } from 'react'
 import { Canvas } from '@react-three/fiber'
 
 import Assembled from './Assembled'
-import { Image as  DreiImage, OrbitControls, PerspectiveCamera, TransformControls } from '@react-three/drei'
+import { Image as  DreiImage, OrbitControls, PerspectiveCamera, Stats, TransformControls } from '@react-three/drei'
 import { AssembledProvider } from '../contexts/AssembledContext'
 import { ObjectsProvider } from '../contexts'
 import { useSnapshot } from 'valtio'
@@ -34,7 +34,10 @@ const CanvasModel = () => {
       gl={{ preserveDrawingBuffer: true }}
       resize={{ debounce: 0 }}
       shadows
-      >
+      dpr={[1,2]}
+      frameloop='demand'
+    >
+      
       <ambientLight intensity={1.9} />
       <PerspectiveCamera 
         makeDefault 
@@ -84,6 +87,7 @@ const CanvasModel = () => {
         enableZoom={true} 
         target={[0,height,0]} 
       />
+      <Stats />
     </Canvas>
   )
 }

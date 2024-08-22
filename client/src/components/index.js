@@ -24,5 +24,5 @@ export {
     CanvasLoader,
     HelpersBoxes,
     OrderDetail,
-    LoginPage
+    LoginPage,
  }
