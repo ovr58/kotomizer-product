@@ -79,7 +79,7 @@ const FilePreview = ({file, setFile}) => {
           setDist({dist: 1, height: 1})
           setRenderWhat('image')
         } else {
-          console.log(file.type)
+          console.log('FILE FROM SHOP - ', JSON.parse(result))
           setFileData(JSON.parse(result))
           setRenderWhat('map')
         }
@@ -94,8 +94,6 @@ const FilePreview = ({file, setFile}) => {
       setRenderWhat(null)
     }
     }, [file.name])
-
-  console.log('FilePreview - ', file)
 
   if (renderWhat) {
     return (

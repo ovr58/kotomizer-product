@@ -1,21 +1,19 @@
 import PropTypes from 'prop-types'
-import { useSnapshot } from 'valtio'
 
-import appState from '../store'
-
-import { getContrastingColor } from '../config/helpers'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 const CustomList = ({ title, list = [], setOption }) => {
 
-    const snap = useSnapshot(appState)
-    
     const [isOpened, setIsOpened] = useState(false)
 
     const customStyle = {
-        backgroundColor: snap.color,
-        color: getContrastingColor(snap.color)
+        backgroundColor: 'white',
+        color: 'black'
     }
+
+    useEffect(() => {
+        list.length > 0 && setOption(list[0])
+    })
     
   return (
     <div className='relative inline-block text-left'>
@@ -61,26 +59,29 @@ const CustomList = ({ title, list = [], setOption }) => {
             right-0 
             z-10 
             mt-1
-            w-20 
+            w-full
             origin-top-right 
             rounded-md 
             shadow-lg 
             focus:outline-none
             text-center
+            h-auto
+            max-h-[300px]
+            overflow-y-auto overflow-x-hidden
             "
             style={{
                 borderColor: customStyle.backgroundColor,
                 borderWidth: "1px",
                 color: customStyle.backgroundColor,
-                backgroundColor: 'white',
                 opacity: isOpened ? '1' : '0',
                 transform: isOpened ? 'scale(1)' : 'scale(0)',
                 transition: 'all 0.6s ease-in',
             }}
         >   
-            <div className="py-1">
-                {list.map((opt) => (
-                    <label 
+            <div className="py-1 w-full">
+                {list.map((opt, i) => (
+                    <div 
+                        key={`${opt}/${i}`}
                         className='
                                 block 
                                 w-full 
@@ -92,11 +93,12 @@ const CustomList = ({ title, list = [], setOption }) => {
                                 hover:bg-gray-100
                                 focus:outline-none 
                                 focus:ring-2 
-                                focus:ring-blue-700' 
-                        onClick={() => setOption(opt.position)}
+                                focus:ring-yellow-700
+                                text-black' 
+                        onClick={() => setOption(opt)}
                     >
-                        {opt.conName}
-                    </label>
+                        {opt}
+                    </div>
                 ))}
             </div>
         </div>

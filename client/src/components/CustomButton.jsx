@@ -33,6 +33,7 @@ const CustomButton = ({ type, title, customStyles, handleClick, children }) => {
         className={`px-2 py-1.5 flex-1 rounded-md ${customStyles} ${type == 'bloked' ? 'pointer-events-none' : ''}`}
         style={generateStyle(type)}
         onClick={handleClick}
+        type={title === 'Войти' ? 'submit' : 'button'}
     >   
         {title}
         {children}

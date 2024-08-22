@@ -9,13 +9,15 @@ import { EditorTabs, TransformTabs, Parts, alerts } from '../config/constants'
 
 import { fadeAnimation, slideAnimation } from '../config/motion'
 
-import {CustomButton, ColorPicker, FilePicker, PartsPicker, Tab, OrderDetail} from '../components'
+import {CustomButton, FilePicker, PartsPicker, Tab, OrderDetail, CatpostShop} from '../components'
 import { Vector3 } from 'three'
 
 const Customizer = () => {
 
   const snap = useSnapshot(appState)
   // глубокое копирование карты сборки
+  const userToken = snap.userToken
+  
   const assemblyMap = snap.assemblyMap
   const placedDetail = assemblyMap[assemblyMap.length-1]
   if (placedDetail) {switch (placedDetail.type) {
@@ -37,7 +39,6 @@ const Customizer = () => {
   // свободные колонны для установки джута - в последствии можно отсевиать по диаметру placedDetail
   const freeColumns = assemblyMap.filter((instruction) => instruction.type === 'column' && instruction.id >= 0)
 
-  // состояние для файла загрузки
   // есть ли детали в сборке, есть ли свободные коннекторы, есть ли деталь с которой работаем
   const intersectedState = snap.intersected
   const hasFreeCons = Boolean(freeCons[0])
@@ -46,17 +47,7 @@ const Customizer = () => {
     assemblyMap.length>1 ? Boolean(placedDetail.id < 0) : false)
   const hasBackground = Boolean(snap.backgroundObj.backgroundImg)
   const hasBackgroundMode = snap.backgroundObj.mode
-
-  const [file, setFile] = useState(null)
-  const [orderPage, setOrderPage] = useState(false)
-// функция для получения свойства поворачиваемости из каталога деталей
-  const isRotatable = (partName) => {
-
-    const isRotatable = Parts[partName].rotatable
-
-    return isRotatable
-  }
-// начальное состояние кнопок отменить, добавить и удалить палитры деталей
+  // начальное состояние кнопок отменить, добавить и удалить палитры деталей
   const [partPickerButtonsStatus, setPartPickerButtonsStatus] = useState({
     undoButton: hasParts && hasNimbedPart,
     addButton: !hasNimbedPart,
@@ -79,25 +70,38 @@ const Customizer = () => {
     place: false,
     rotate:false
   })
+  
+// состояние для файла загрузки
+  const [file, setFile] = useState(null)
+  const [orderPage, setOrderPage] = useState(false)
+// функция для получения свойства поворачиваемости из каталога деталей
+  const isRotatable = (partName) => {
+
+    const isRotatable = Parts[partName].rotatable
+
+    return isRotatable
+  }
 
 // функция генерации содержимого вкладок конструктора в зависимости от имени активной вкладки в состоянии
   const generateTabContent = () => {
     switch (activeEditorTab) {
       case "colorpicker":
-        return <ColorPicker /> // 
+        return <CatpostShop /> // вкладка с магазином готовых когтеточек
       case "filepicker":
-        return <FilePicker // вкладка загрузки готовых сборок
-                  file={file}
-                  setFile={setFile}
-                  handleDownLoad={handleDownLoad}
-                />
+        return userToken ? 
+          <FilePicker // вкладка загрузки готовых сборок
+            file={file}
+            setFile={setFile}
+            handleDownLoad={handleDownLoad}
+          /> : alert('Войдите или отправьте заявку на регистрацию!')
       case "partspicker":
-        return <PartsPicker // вкладка палитры деталей
-                  partPickerButtonsStatus={partPickerButtonsStatus}
-                  addToMap={addToMap}
-                  unDoAdd={unDoAdd}
-                  deleteLast={deleteLast}
-               />
+        return userToken ?
+         <PartsPicker // вкладка палитры деталей
+            partPickerButtonsStatus={partPickerButtonsStatus}
+            addToMap={addToMap}
+            unDoAdd={unDoAdd}
+            deleteLast={deleteLast}
+          /> : alert('Войдите или отправьте заявку на регистрацию!')
       default:
         return null
     }
@@ -146,7 +150,6 @@ const Customizer = () => {
         return
     }
   }
-// функция чтения файла ПОКА В РАЗРАБОТКЕ
   const readFile = (file) => {
     try {
       reader(file).then((result) => {

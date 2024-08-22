@@ -28,6 +28,25 @@ function LoginPage({token}) {
     console.log(e.target.checked)
     setRememberMe(e.target.checked)
   }
+  
+  async function handleResetPassword (event) {
+
+    event.preventDefault()
+
+    const { error } = await supabase.auth.resetPasswordForEmail(formData.userEmail)
+
+    if (error) {
+      alert(error.error_description || error.message)
+    } else {
+      alert('Password reset email sent!')
+    }
+  }
+
+  const logOut = () => {
+    supabase.auth.signOut()
+    Cookies.remove('kotomizerUserToken')
+    appState.userToken = null
+  }
 
   async function handleSubmit (e) {
     e.preventDefault()
@@ -83,7 +102,7 @@ function LoginPage({token}) {
               placeholder="Ваш e-mail..."
           />
           <label 
-            for="email" 
+            htmlFor="email" 
             className="
               absolute 
               cursor-text 
@@ -128,7 +147,7 @@ function LoginPage({token}) {
               placeholder="Ваш пароль..."
           />
           <label 
-            for="password" 
+            htmlFor="password" 
             className="
               absolute 
               cursor-text 
@@ -224,6 +243,7 @@ function LoginPage({token}) {
         {/* <!-- Forgot password link --> */}
         <a
           href="#!"
+          onClick={(e) => handleResetPassword(e)}
           className="text-primary transition duration-150 ease-in-out hover:text-primary-600 focus:text-primary-600 active:text-primary-700"
         >
           Забыли пароль?
@@ -253,6 +273,14 @@ function LoginPage({token}) {
     <div>
       <div>Добро пожаловать, </div>
       <div>{JSON.parse(token).user.user_metadata.full_name}</div>
+      <div className="p-2">
+        <CustomButton  
+          type="filled"
+          title='Выйти из аккаунта'
+          customStyles="py-2 px-4 w-full transition ease-in duration-200 text-center text-base font-semibold" 
+          handleClick={logOut}
+        />
+      </div>       
     </div>
   }
   </div>

@@ -4,6 +4,7 @@ export const EditorTabs = [
   {
     name: "colorpicker",
     icon: swatch,
+    label: 'магазин готовых когтеточек'
   },
   {
     name: "filepicker",

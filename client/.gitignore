@@ -24,3 +24,8 @@ dist-ssr
 *.sw?
 *.txt
 *.blend
+
+# Ignore environment variable files
+.env
+.env.local
+.env.*.local
