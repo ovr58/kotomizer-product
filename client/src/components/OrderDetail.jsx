@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { downloadFile } from '../config/helpers';
+import { downloadFile, getPriceAndSpecs } from '../config/helpers';
 import CustomButton from './CustomButton';
 import { useSnapshot } from 'valtio';
 import appState from '../store';
@@ -13,16 +13,9 @@ function OrderDetail() {
 
   const snap = useSnapshot(appState)
   useEffect(() => {
-    let tableObj = {}
-    let totalPrice = 0
-    snap.assemblyMap.forEach((instruction, i) => {
-      const description = `${Parts[instruction.name].description} Материал: ${instruction.material.name || 'стандарт'}`
-      const detailPrice = Parts[instruction.name].price * (instruction.scale ? instruction.scale[0]*instruction.scale[1] : 1)
-      tableObj[i] = [description, detailPrice.toFixed(2)]
-      totalPrice += Math.round(100*detailPrice)/100
-    })
-    setPrice(totalPrice)
-    setTableContent(tableObj)
+    const priceAndSpecs = getPriceAndSpecs(snap.assemblyMap)
+    setPrice(priceAndSpecs.totalPrice)
+    setTableContent(priceAndSpecs.tableObj)
   }, [snap.assemblyMap])
   console.log('RENDERED - ORDER CARD')
   useEffect(() => {

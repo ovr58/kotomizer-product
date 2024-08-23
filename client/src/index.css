@@ -1,6 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,wght@0,200;0,600;1,900&display=swap");
 @import url("https://rsms.me/inter/inter.css");
-
+@import url('https://fonts.googleapis.com/css?family=Anton|Roboto');
 
 @tailwind base;
 @tailwind components;
@@ -113,4 +113,27 @@ input[type="file"] {
 .canvas-loader {
   @apply text-[10px] w-[1em] h-[1em] relative rounded-[50%];
   transform: translateZ(0);
+}
+
+.waviy {
+  @apply absolute;
+}
+.waviy span {
+  @apply relative inline-block text-red-800 uppercase animate-[flip_2s_infinite];
+  animation-delay: calc(0.2s * var(--i));
+}
+@keyframes flip {
+  0%,
+  80% {
+    transform: rotateY(360deg);
+  }
+}
+
+.word {
+  font-family: "Anton", sans-serif;
+  perspective: 1000px;
+}
+
+.word span {
+  @apply cursor-pointer inline-block text-[100px] select-none leading-[0.8];
 }

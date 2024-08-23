@@ -1,5 +1,6 @@
 import { Vector3, Box3 } from "three"
 import * as THREE from 'three'
+import { Parts } from "./constants"
 
 export const downloadFile = (elementName, cpiData) => {
   console.log('DOWNLOAD - ', cpiData)
@@ -37,6 +38,20 @@ export const reader = (file) =>
     }
   })
   
+export const getPriceAndSpecs = (assemblyMap) => {
+  console.log(assemblyMap)
+  let tableObj = {}
+  let totalPrice = 0
+  assemblyMap.forEach((instruction, i) => {
+    const description = `${Parts[instruction.name].description} Материал: ${instruction.material.name || 'стандарт'}`
+    const detailPrice = Parts[instruction.name].price * (instruction.scale ? instruction.scale[0]*instruction.scale[1] : 1)
+    tableObj[i] = [description, detailPrice.toFixed(2)]
+    console.log('TOTAL ', totalPrice)
+    totalPrice += (Math.round(100*detailPrice)/100)
+  })
+  totalPrice = totalPrice.toFixed(2)
+  return {tableObj, totalPrice}
+}
 
 export const getAllMaterials = () => {
   const materialList = []

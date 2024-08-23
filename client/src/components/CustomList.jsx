@@ -13,7 +13,7 @@ const CustomList = ({ title, list = [], setOption }) => {
 
     useEffect(() => {
         list.length > 0 && setOption(list[0])
-    })
+    }, [list.toString()])
     
   return (
     <div className='relative inline-block text-left'>
@@ -95,7 +95,7 @@ const CustomList = ({ title, list = [], setOption }) => {
                                 focus:ring-2 
                                 focus:ring-yellow-700
                                 text-black' 
-                        onClick={() => setOption(opt)}
+                        onClick={() => {setOption(opt), setIsOpened(!isOpened)}}
                     >
                         {opt}
                     </div>
