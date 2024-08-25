@@ -25,7 +25,7 @@ const Home = () => {
     }, [userSessionToken])
   return (
     <AnimatePresence key = {'HomePage'}>
-        <motion.section className='home' {...slideAnimation('left')}>
+        <motion.section className='home group' {...slideAnimation('left')}>
             <motion.header {...slideAnimation('down')}>
                 <img 
                     src='./Logomiddle.svg'
@@ -35,16 +35,13 @@ const Home = () => {
             </motion.header>
             <motion.div className='home-content' {...headContainerAnimation}>
                 <motion.div {...headTextAnimation}>
-                    {/* <h1 className='head-text'> */}
-                    <div className="word group">
+                    <div className="word">
                         <span className='group-hover:animate-custom-toplong'>K</span>
                         <span className='group-hover:animate-custom-shrinkjump origin-bottom'>O</span>
                         <span className='group-hover:animate-custom-falling origin-bottom'>T</span>
                         <span className='group-hover:animate-custom-balance origin-bottom-left'>O</span>
                         <span className='group-hover:animate-custom-rotate'> mizer!</span>
                     </div>
-                        {/* КОТО <br className='xl:block hidden' /> <span className='text-xl'>МАЙЗЕР</span>!
-                    </h1> */}
                 </motion.div>
                 <motion.div {...headContentAnimation} className='flex flex-col gap-5'>
                     <p className='max-w-md font-normal text-gray-600 text-base'>
@@ -61,7 +58,7 @@ const Home = () => {
         </motion.section>
         <motion.div
             key='orderDetailTab'
-            className='absolute top-[60px] right-0 z-10'
+            className='absolute top-[60px] right-0 z-10 group'
             {...slideAnimation('right')}
         >
             <LoginPage token={userSessionToken}/>

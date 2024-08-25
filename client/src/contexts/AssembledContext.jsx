@@ -62,9 +62,9 @@ export const AssembledProvider = ({ snap, children }) => {
                   return mat.name == (instruction.material[detailIndex] ? 
                 instruction.material[detailIndex] : objectNodes[node].userData.originalMaterialName)}
               )[0].clone()
-              if (instruction.type === 'jumper') {
-                const u = instruction.scale[1]
-                const v = instruction.scale[0]
+              if (instruction.type) {
+                const u = instruction.scale ? instruction.scale[1] : 1
+                const v = instruction.scale ? instruction.scale[0] : 1
                 console.log('UV', u, v)
                 if (detailMaterial.map) {
                   detailMaterial.map = detailMaterial.map.clone()

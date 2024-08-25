@@ -1,4 +1,4 @@
-import React, { useRef } from 'react'
+import React, { Suspense, useRef } from 'react'
 
 import { Canvas } from '@react-three/fiber'
 
@@ -8,6 +8,7 @@ import { AssembledProvider } from '../contexts/AssembledContext'
 import { ObjectsProvider } from '../contexts'
 import { useSnapshot } from 'valtio'
 import appState from '../store'
+import { CanvasLoader } from '../components'
 
 const CanvasModel = () => {
 
@@ -44,11 +45,13 @@ const CanvasModel = () => {
         position = {[dist, height, dist]} 
         fov={25}
       />
+      <Suspense fallback={<CanvasLoader />}>
       <ObjectsProvider>
         <AssembledProvider snap={{assemblyMap: JSON.parse(JSON.stringify(assemblyMap))}}>
             <Assembled />
         </AssembledProvider>
       </ObjectsProvider>
+      </Suspense>
       {snap.backgroundObj.backgroundImg &&
       <>
         {transformMode != 'none' ? 

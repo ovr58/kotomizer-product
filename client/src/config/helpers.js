@@ -31,7 +31,7 @@ export const reader = (file) =>
     const fileReader = new FileReader()
     fileReader.onload = () => resolve(fileReader.result)
     fileReader.onerror = () => reject(error)
-    if (file.type == 'image/jpeg') {
+    if (file.type.includes('image')) {
       fileReader.readAsDataURL(file)
     } else {
       fileReader.readAsText(file)

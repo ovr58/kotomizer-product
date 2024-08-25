@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { Suspense, useEffect, useRef, useState } from 'react'
 import { ErrorBoundary, useErrorBoundary } from 'react-error-boundary'
 import { CanvasLoader } from '../components';
 import { Image as  DreiImage, OrbitControls, PerspectiveCamera } from '@react-three/drei';
@@ -7,11 +7,9 @@ import { ObjectsProvider } from '../contexts/ObjectsContext';
 import { AssembledProvider, useAssembled } from '../contexts/AssembledContext';
 import { Canvas } from '@react-three/fiber';
 
-function Fallback({ error }) {
+function Fallback({ error, resetErrorBoundary }) {
 
-  const resetBoundary = useErrorBoundary()
-
-  return <CanvasLoader error={error} resetErrorBoundary={resetBoundary} />
+  return <CanvasLoader error={error} resetErrorBoundary={resetErrorBoundary} />
 }
 
 const PreviewAssembled = ({ setDist }) => {
@@ -23,7 +21,8 @@ const PreviewAssembled = ({ setDist }) => {
 
   useEffect(() => {
     if (previewAssembled.current) {
-      setDist(getDistance(previewAssembled.current))
+      const dist = getDistance(previewAssembled.current)
+      setDist(dist)
     }
   }, [detailsPreview.current.length])
 
@@ -62,40 +61,51 @@ const PreviewAssembled = ({ setDist }) => {
 
 const FilePreview = ({file, setFile}) => {
 
-  const [fileData, setFileData] = useState(null)
-  const [renderWhat, setRenderWhat] = useState(null)
-  const [imgScale, setImgScale] = useState([1,1])
-  const [dist, setDist] = useState({dist: 1, height: 1})
+  const [ dist, setDist] = useState({dist: 1, height: 1})
+  
+  const [fileData, setFileData] = useState({
+    image: null,
+    imageScale: [0,0],
+    map: null,
+  })
 
-  console.log('FILE PREVIEW RENDERED - ', fileData)
   useEffect(() => {
+    readFile(file)
+  }, [file.name, fileData.image, fileData.map])
+  
+  console.log('FILE NAME - ', fileData)
+  function readFile(file) {
     try {
       reader(file).then((result) => {
-        if (file.type == 'image/jpeg') {
+        if (file.type.includes('image')) {
+          console.log('FILE READ AS IMAGE')
           const img = new Image()
           img.src = result
-          setImgScale([img.width/Math.min(img.width, img.height), img.height/Math.min(img.width, img.height)])
-          setFileData(result)
-          setDist({dist: 1, height: 1})
-          setRenderWhat('image')
+          console.log(img.width)
+          setFileData({
+            image: result,
+            imageScale: [img.width/Math.min(img.width, img.height), img.height/Math.min(img.width, img.height)],
+            map: null
+          })
+          setDist({dist: 1, height: img.height/2})
         } else {
-          console.log('FILE FROM SHOP - ', JSON.parse(result))
-          setFileData(JSON.parse(result))
-          setRenderWhat('map')
+          setFileData({
+            image: null,
+            imageScale: [0, 0],
+            map: JSON.parse(result)
+          })
         }
       }).catch((error) => {
         console.log(error.message)
         setFile(null)
-        setRenderWhat(null)
       })
     } catch (error) {
       console.log(error.message)
       setFile(null)
-      setRenderWhat(null)
     }
-    }, [file.name])
+  }
 
-  if (renderWhat) {
+  if (fileData.image || fileData.map) {
     return (
       <Canvas
         name={'previewCanvas'}
@@ -111,21 +121,23 @@ const FilePreview = ({file, setFile}) => {
               fov={25}
             />
             <OrbitControls
-              autoRotate={file.type == 'image/jpeg' ? false : true}
+              autoRotate={file.type.includes('image') ? false : true}
               enableZoom={true} 
               target={[0,dist.height,0]} 
             />
             <directionalLight position={[dist.dist, dist.height, dist.dist]} />
-            {renderWhat == 'image' ? 
-              <DreiImage url={fileData} position={[0,dist.height,0]} rotation={[0,Math.PI/4,0]} scale={imgScale}/>
-            : 
-              renderWhat == 'map' ? 
-              <ObjectsProvider>
-                <AssembledProvider snap = {{assemblyMap: fileData}}>
-                  <PreviewAssembled setDist={setDist} />
-                </AssembledProvider>
-              </ObjectsProvider> : null
-            }
+            <Suspense fallback={<CanvasLoader />}>
+              {fileData.image &&
+                <DreiImage url={fileData.image} position={[0,dist.height,0]} rotation={[0,Math.PI/4,0]} scale={fileData.imageScale}/>
+              } 
+              {fileData.map && 
+                <ObjectsProvider>
+                  <AssembledProvider snap = {{assemblyMap: fileData.map}}>
+                    <PreviewAssembled setDist={setDist}/>
+                  </AssembledProvider>
+                </ObjectsProvider>
+              }
+            </Suspense>
           </ErrorBoundary>
       </Canvas>
     );

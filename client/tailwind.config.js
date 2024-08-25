@@ -13,7 +13,7 @@ module.exports = {
         'custom-balance': 'customBalance 1.5s ease-in-out 1s',
         'custom-shrinkjump': 'customShrinkjump 1s ease-in-out 3s',
         'custom-falling': 'customFalling 2s ease-out 2s',
-        'custom-rotate': 'customRotate 1s ease-out 4s',
+        'custom-rotate': 'customRotate 1s ease-out 1s',
         'custom-toplong': 'customToplong 1.5s linear 2s', 
       },
       keyframes: {

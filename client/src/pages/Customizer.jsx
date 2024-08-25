@@ -153,7 +153,7 @@ const Customizer = () => {
   const readFile = (file) => {
     try {
       reader(file).then((result) => {
-        if (file.type == 'image/jpeg') {
+        if (file.type.includes('image')) {
           const img = new Image()
           img.src = result
           appState.backgroundObj = {

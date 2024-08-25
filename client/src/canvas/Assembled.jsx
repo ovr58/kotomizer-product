@@ -476,7 +476,7 @@ useEffect(() => {
             </group>
     )})}
     </group>
-    {helpersBoxes.length>0 && <HelpersBoxes helpersBoxesObbArray={helpersBoxes} />}
+    {/* {helpersBoxes.length>0 && <HelpersBoxes helpersBoxesObbArray={helpersBoxes} />} */}
     {hlinePoints.length > 0 &&
       <Line 
         ref={highLightLine} 

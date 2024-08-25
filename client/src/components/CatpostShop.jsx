@@ -92,7 +92,7 @@ const CatpostShop = ({ }) => {
       className='filepicker-container'
     >
       {allFiles[0] && 
-      <div className='waviy z-50 top-1/3 right-10'>
+      <div className='waviy-price z-50 top-1/3 right-10'>
         <span 
           className='
             shadow-sm 
