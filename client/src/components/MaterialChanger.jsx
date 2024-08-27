@@ -13,6 +13,7 @@ import appState from '../store'
 import { useFrame } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
 import { useObjects } from '../contexts'
+import CloseButton from './CloseButton'
 
 const Model = ({ name, positionCorrection, size, textureName, textureDefault, setObjectState }) => {
   
@@ -188,7 +189,8 @@ const Model = ({ name, positionCorrection, size, textureName, textureDefault, se
           }
         </Select>
       ))}
-    <group
+    <CloseButton closeButtonRef={closeButton} position={positionCorrection} setOpenState={setOpenState} />
+    {/* <group
       name={'CloseButton'}
       ref={closeButton}
       position={positionCorrection}
@@ -210,7 +212,7 @@ const Model = ({ name, positionCorrection, size, textureName, textureDefault, se
         <boxGeometry args={[0.02*hoveredCloseButton, 0.07*hoveredCloseButton, 0.02*hoveredCloseButton]} />
         <meshBasicMaterial color="red" />
       </mesh>
-    </group>
+    </group> */}
    </group>
   )
 }

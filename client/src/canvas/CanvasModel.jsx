@@ -1,4 +1,4 @@
-import React, { Suspense, useRef } from 'react'
+import React, { Suspense, useEffect, useRef, useState } from 'react'
 
 import { Canvas } from '@react-three/fiber'
 
@@ -8,18 +8,16 @@ import { AssembledProvider } from '../contexts/AssembledContext'
 import { ObjectsProvider } from '../contexts'
 import { useSnapshot } from 'valtio'
 import appState from '../store'
-import { CanvasLoader } from '../components'
 
 const CanvasModel = () => {
 
   const transform = useRef()
   const orbit = useRef()
-  const transformObject = useRef()
+  const transformObject = useRef({})
 
   const snap = useSnapshot(appState)
 
   const assemblyMap = snap.assemblyMap
-
   const urlData = snap.backgroundObj.backgroundImg
   const setPosition = snap.backgroundObj.position
   const setRotation = snap.backgroundObj.rotation
@@ -45,40 +43,29 @@ const CanvasModel = () => {
         position = {[dist, height, dist]} 
         fov={25}
       />
-      <Suspense fallback={<CanvasLoader />}>
       <ObjectsProvider>
         <AssembledProvider snap={{assemblyMap: JSON.parse(JSON.stringify(assemblyMap))}}>
             <Assembled />
         </AssembledProvider>
       </ObjectsProvider>
-      </Suspense>
       {snap.backgroundObj.backgroundImg &&
       <>
-        {transformMode != 'none' ? 
-        <TransformControls 
-          ref = {transform}
-          showZ={Boolean(transformMode !== 'scale')} 
-          mode={transformMode} 
-        >
+        {transformMode != 'none' && 
+          <TransformControls 
+            ref = {transform}
+            showZ={Boolean(transformMode !== 'scale')} 
+            mode={transformMode} 
+            object={transformObject.current}
+          />
+        }
         <DreiImage 
+          ref={transformObject}
           key={'scalableImage'}
           url={urlData} 
           position={setPosition} 
           rotation={setRotation} 
           scale={setScale}
-          />
-        </TransformControls>
-        :
-        transform.current && 
-        <DreiImage 
-          ref={transformObject}
-          key={'readyImage'}
-          url={urlData} 
-          position={transform.current.object.position} 
-          rotation={transform.current.object.rotation} 
-          scale={[transform.current.object.scale.x * setScale[0], transform.current.object.scale.y * setScale[1]]}
         />
-        }
       </>
       }
       <OrbitControls
@@ -90,6 +77,7 @@ const CanvasModel = () => {
         enableZoom={true} 
         target={[0,height,0]} 
       />
+      
       <Stats />
     </Canvas>
   )

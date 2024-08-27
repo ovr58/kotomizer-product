@@ -12,6 +12,7 @@ import HelpersBoxes from "./HelperBoxes"
 import OrderDetail from "./OrderDetail"
 import LoginPage from "./LoginPage"
 import CatpostShop from "./CatpostShop"
+import CloseButton from "./CloseButton"
 
 export { 
     KnobControl, 
@@ -26,5 +27,6 @@ export {
     HelpersBoxes,
     OrderDetail,
     LoginPage,
-    CatpostShop
+    CatpostShop,
+    CloseButton
  }

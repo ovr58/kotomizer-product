@@ -373,7 +373,7 @@ const Customizer = () => {
       console.log('MODE CHANGED', hasNimbedPart, hasBackground)
       const modes = ['none', 'translate', 'scale', 'rotate']
       const currModeIndex = modes.indexOf(hasBackgroundMode)
-      const nextModeIndex = currModeIndex + 1 >= modes.length - 1 ? 0 : currModeIndex + 1
+      const nextModeIndex = currModeIndex + 1 > modes.length - 1 ? 0 : currModeIndex + 1
       appState.backgroundObj.mode = modes[nextModeIndex]
       console.log('MODE - ', modes[nextModeIndex])
     }
