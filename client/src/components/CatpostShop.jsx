@@ -51,6 +51,7 @@ const CatpostShop = ({ }) => {
           })
           break;
         case 'select':
+          appState.shopModelData = 
           appState.assemblyMap = JSON.parse(Object.values(allFiles[indexInFiles])[0])
           break;
       
@@ -72,6 +73,7 @@ const CatpostShop = ({ }) => {
       }
       const allFiles = city ? 
         Object.keys(data).filter((key) => data[key].seller_city === city).map((key) => {return {[key]: data[key].seller_stock}}) : []
+      console.log('ALL FILES - ', allFiles)
       setAllFiles(allFiles)
       setFile(allFiles.length>0 ? getFile(Object.values(allFiles[0])[0]) : null)
       setPrice(getPriceAndSpecs(JSON.parse(Object.values(allFiles[0])[0])).totalPrice)

@@ -60,7 +60,9 @@ const appState = proxy({
     objectToChange: null,
     assembledSize: null,
     backgroundObj: {},
-    userToken: null
+    userToken: null,
+    shopModelData: null,
+
 })
 
 export default appState

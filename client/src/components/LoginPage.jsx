@@ -6,14 +6,14 @@ import Cookies from 'js-cookie'
 import appState from '../store'
 
 
-function LoginPage({token}) {
+function LoginPage({token, setRegisterForm}) {
 
   const [formData, setFormData] = useState({
     userEmail: '',
     userPassword: ''
   })
-  console.log(JSON.parse(token))
   const [rememberMe, setRememberMe] = useState(false)
+
 
   const handleChange = (e) => {
     setFormData((prevFormData) => {
@@ -60,7 +60,6 @@ function LoginPage({token}) {
         alert(error)
         return
       } else if (data.user) {
-        console.log(data)
         appState.userToken = JSON.stringify(data)
         if (rememberMe) {
           Cookies.set('kotomizerUserToken', JSON.stringify(data), { expires: 7 })
@@ -267,6 +266,7 @@ function LoginPage({token}) {
           type="filled"
           title='Регистрация'
           customStyles="py-2 px-4 w-full transition ease-in duration-200 text-center text-base font-semibold" 
+          handleClick={() => setRegisterForm(true)}
         />
       </div>         
     </form> : 

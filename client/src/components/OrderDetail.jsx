@@ -1,17 +1,78 @@
 import React, { useEffect, useState } from 'react'
-import { downloadFile, getPriceAndSpecs } from '../config/helpers';
-import CustomButton from './CustomButton';
-import { useSnapshot } from 'valtio';
-import appState from '../store';
-import { Parts } from '../config/constants';
+import { downloadFile, getPriceAndSpecs } from '../config/helpers'
+import CustomButton from './CustomButton'
+import { useSnapshot } from 'valtio'
+import appState from '../store'
+import emailjs from '@emailjs/browser'
 
 function OrderDetail() {
 
   const [ img, setImg ] = useState(null)
   const [ price, setPrice ] = useState(0)
   const [ tableContent, setTableContent ] = useState({})
+  const [loading, setLoading] = useState(false)
+
+  const formVerification = () => {
+    let verificationResult = true
+    if (Object.values(form).includes('')) {
+      alert('Все поля должны быть заполнены!')
+      verificationResult = false
+    }
+    if (/^\d+$/.test(form.INN)) {
+      alert('Поле ИНН должно содеражать только цифры!')
+      verificationResult = false
+    }
+    return verificationResult
+  }
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+
+    if (!formVerification()) {
+      return
+    }
+
+    setLoading(true)
+
+    emailjs
+      .send(
+        import.meta.env.VITE_APP_EMAILJS_SERVICE_ID,
+        import.meta.env.VITE_APP_EMAILJS_TEMPLATE_ID,
+        {
+          from_name: `${form.firstName} ${form.lastName}`,
+          to_name: 'Nataly',
+          from_email: form.email,
+          to_email: 'nm2413027@gmail.com',
+          message: `ИНН: ${form.INN}, город: ${form.city}, ${form.message}`,
+        },
+        import.meta.env.VITE_APP_EMAILJS_PUBLIC_KEY
+      )
+      .then(
+        () => {
+          setLoading(false)
+
+          alert('Ваша форма отправлена. Наш менеджер свяжется с Вами в ближайшее время!')
+          setForm({
+            firstName: '',
+            lastName: '',
+            email: '',
+            INN: '',
+            city: '',
+            message: ''
+          })
+        },
+        (error) => {
+          setLoading(false)
+
+          console.error(error)
+
+          alert(contact_text.alert_message_sent)
+        }
+      )
+  }
 
   const snap = useSnapshot(appState)
+
   useEffect(() => {
     const priceAndSpecs = getPriceAndSpecs(snap.assemblyMap)
     setPrice(priceAndSpecs.totalPrice)
@@ -23,6 +84,10 @@ function OrderDetail() {
     (document.querySelector('.mainCanvas canvas') && img === null) && setImg(downloadFile('mainCanvas', 'getImg'))
           
   }, [])
+
+  const handleMakeAnOrder = () => {
+    return
+  }
 
   return (
     <div className="right-container">
@@ -70,6 +135,7 @@ function OrderDetail() {
             type="filled"
             title='Заказ'
             customStyles="py-2 px-4 w-full transition ease-in duration-200 text-center text-base font-semibold" 
+            handleClick={handleMakeAnOrder}
           />
         </div>
         </div>

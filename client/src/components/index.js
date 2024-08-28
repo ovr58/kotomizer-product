@@ -13,6 +13,7 @@ import OrderDetail from "./OrderDetail"
 import LoginPage from "./LoginPage"
 import CatpostShop from "./CatpostShop"
 import CloseButton from "./CloseButton"
+import RegistrationForm from "./RegistrationForm"
 
 export { 
     KnobControl, 
@@ -28,5 +29,6 @@ export {
     OrderDetail,
     LoginPage,
     CatpostShop,
-    CloseButton
+    CloseButton,
+    RegistrationForm
  }

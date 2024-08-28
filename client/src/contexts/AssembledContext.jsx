@@ -11,6 +11,8 @@ export const useAssembled = () => useContext(AssembledContext);
 
 export const AssembledProvider = ({ snap, children }) => {
 
+  console.log('ASSEMBLED PROVIDER')
+
   const stateString = JSON.stringify(snap.assemblyMap)
   const {objects, materials} = useObjects()
 

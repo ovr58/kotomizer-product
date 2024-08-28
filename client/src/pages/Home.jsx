@@ -8,17 +8,19 @@ import {
 } from '../config/motion'
 
 import appState from '../store'
-import { CustomButton, LoginPage } from '../components'
+import { CustomButton, LoginPage, RegistrationForm } from '../components'
 
 import Cookies from 'js-cookie'
 import { useSnapshot } from 'valtio'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 const Home = () => {
 
     const snap = useSnapshot(appState)
 
     const userSessionToken = useMemo(() => {return Cookies.get('kotomizerUserToken') || snap.userToken}, [snap.userToken])
+
+    const [registerForm, setRegisterForm] = useState(false)
 
     useEffect(() => {
         appState.userToken = userSessionToken
@@ -61,7 +63,7 @@ const Home = () => {
             className='absolute top-[60px] right-0 z-10 group'
             {...slideAnimation('right')}
         >
-            <LoginPage token={userSessionToken}/>
+            {registerForm ? <RegistrationForm setRegisterForm={setRegisterForm} /> : <LoginPage token={userSessionToken} setRegisterForm={setRegisterForm}/>}
       </motion.div>
     </AnimatePresence>
   )

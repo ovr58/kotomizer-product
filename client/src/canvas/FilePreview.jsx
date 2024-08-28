@@ -1,5 +1,5 @@
 import React, { Suspense, useEffect, useRef, useState } from 'react'
-import { ErrorBoundary, useErrorBoundary } from 'react-error-boundary'
+import { ErrorBoundary } from 'react-error-boundary'
 import { CanvasLoader } from '../components';
 import { Image as  DreiImage, OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { getDistance, reader } from '../config/helpers';
@@ -70,8 +70,9 @@ const FilePreview = ({file, setFile}) => {
   })
 
   useEffect(() => {
+    console.log('USE EFFECT - ', file.name, fileData.image, fileData.map)
     readFile(file)
-  }, [file.name, fileData.image, fileData.map])
+  }, [file.name])
   
   console.log('FILE NAME - ', fileData)
   function readFile(file) {
@@ -89,6 +90,7 @@ const FilePreview = ({file, setFile}) => {
           })
           setDist({dist: 1, height: img.height/2})
         } else {
+          console.log('FILE READ AS JSON')
           setFileData({
             image: null,
             imageScale: [0, 0],
