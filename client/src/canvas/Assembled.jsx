@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid'
 import appState from '../store'
 
 // найти расстояние до объекта при настройке камеры, настроить позиции деталей, проверить что детали на местах
-import { getPartSize, getDistance } from '../config/helpers'
+import { getPartSize, getDistance, downloadFile } from '../config/helpers'
 // линии для подсветки и выбора граней при установке jumper, загрузка моделей
 import { Line } from '@react-three/drei'
 // проверки в каждом кадре и состояние сцены и камеры для вычислений
@@ -404,6 +404,7 @@ useEffect(() => {
     const intersected = findIntersections()
     appState.intersected = intersected
     appState.assemblyMap = assembledObj.assemblyMap
+    appState.orderImg = downloadFile('mainCanvas', 'getImg')
   } 
   }, [assembledObj.stateString])
     

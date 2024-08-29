@@ -1,9 +1,14 @@
 import React, { useEffect, useState } from 'react'
-import { downloadFile, getPriceAndSpecs } from '../config/helpers'
+import { getPriceAndSpecs } from '../config/helpers'
 import CustomButton from './CustomButton'
 import { useSnapshot } from 'valtio'
 import appState from '../store'
+import 'react-phone-number-input/style.css'
+import PhoneInput from 'react-phone-number-input'
 import emailjs from '@emailjs/browser'
+import { whatsup, telegram } from '../assets'
+
+const telNumber = import.meta.env.VITE_TELNUMBER
 
 function OrderDetail() {
 
@@ -12,24 +17,13 @@ function OrderDetail() {
   const token = snap.userToken
   const data = snap.shopModelData
   const assemblyMap = snap.assemblyMap
+  const img = snap.orderImg
 
-  const [ img, setImg ] = useState(null)
   const [ price, setPrice ] = useState(0)
   const [ tableContent, setTableContent ] = useState({})
-  const [ form, setForm ] = useState({
-    name: '',
-    phoneNumber: ''
-  })
+  const [ formName, setFormName ] = useState('')
+  const [ formPhone, setFormPhone ] = useState('')
   const [loading, setLoading] = useState(false)
-
-  const handleChange = (e) => {
-    setForm((prevFormData) => {
-      return {
-        ...prevFormData,
-        [e.target.name]: e.target.value
-      }
-    })
-  }
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -50,20 +44,20 @@ function OrderDetail() {
         message: `USER_ID: ${JSON.parse(token).user.id}, СПЕЦИФИКАЦИЯ ${JSON.stringify(assemblyMap)} ЦЕНА ${price} руб.` ,
       }
     } else {
-      if (!form.name) {
+      if (!formName) {
         alert ('Нужно заполнить строку Имя.')
         return
       }
-      if (!form.phoneNumber) {
+      if (!formPhone) {
         alert ('Нужно заполнить строку Номер телефона.')
         return
       }
       orderDetails = {
-        from_name: form.name,
+        from_name: formName,
         to_name: data.seller_id,
         from_email: 'physical entity',
         to_email: 'nm2413027@gmail.com',
-        message: `USER_PHONE: ${form.phoneNumber}, СПЕЦИФИКАЦИЯ ${JSON.stringify(assemblyMap)} ЦЕНА ${price} руб.` ,
+        message: `USER_PHONE: ${formPhone}, СПЕЦИФИКАЦИЯ ${JSON.stringify(assemblyMap)} ЦЕНА ${price} руб.` ,
       }
     }
 
@@ -81,10 +75,8 @@ function OrderDetail() {
           setLoading(false)
 
           alert('Ваша заказ отправлен. Наш менеджер свяжется с Вами в ближайшее время!')
-          setForm({
-            name: '',
-            phoneNumber: ''
-          })
+          setFormName('')
+          setFormPhone('')
         },
         (error) => {
           setLoading(false)
@@ -102,11 +94,6 @@ function OrderDetail() {
     setTableContent(priceAndSpecs.tableObj)
   }, [assemblyMap])
   console.log('RENDERED - ORDER CARD')
-  useEffect(() => {
-
-    (document.querySelector('.mainCanvas canvas') && img === null) && setImg(downloadFile('mainCanvas', 'getImg'))
-          
-  }, [])
 
   return (
     <div className="right-container">
@@ -153,11 +140,11 @@ function OrderDetail() {
           !token ? 
           <div className="w-full p-2 mt-6">
             <div key='phoneNumber' className='relative bg-white w-full'>
-              <input 
-                type="text" 
+              <PhoneInput
                 id="phoneNumber" 
                 name="phoneNumber"
-                onChange={handleChange} 
+                value={formPhone}
+                onChange={setFormPhone} 
                 className="
                   peer 
                   bg-transparent 
@@ -202,7 +189,7 @@ function OrderDetail() {
                 type="text" 
                 id="name" 
                 name="name" 
-                onChange={handleChange}
+                onChange={(e) => setFormName(e.target.value)}
                 className="
                   peer 
                   bg-transparent 
@@ -257,6 +244,36 @@ function OrderDetail() {
             customStyles="py-2 px-4 w-full transition ease-in duration-200 text-center text-base font-semibold" 
             handleClick={handleSubmit}
           />
+        </div>
+        <div className="flex justify-start ">
+          <a
+            href={`https://wa.me/${telNumber}`}
+            target="_blank"
+            className="px-2 py-2 shadow-primary hover:animate-ping"
+            rel="noreferrer"
+            aria-label="message via whatsapp"
+          >
+            <img
+              src={whatsup}
+              alt="whatsup"
+              className=" h-[30px] w-[30px]"
+              title='Связаться с менеджером по Ватсап...'
+            />
+          </a>
+          <a
+            href={`https://t.me/natatulia84`}
+            target="_blank"
+            className="px-2 py-2 shadow-primary hover:animate-ping"
+            rel="noreferrer"
+            aria-label="message via telegram"
+          >
+            <img
+              src={telegram}
+              alt="telegram"
+              className=" h-[30px] w-[30px]"
+              title='Связаться с менеджером по Телеграм...'
+            />
+          </a>
         </div>
         </div>
       </form>
