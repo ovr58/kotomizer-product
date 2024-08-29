@@ -61,7 +61,6 @@ function RegistrationForm({setRegisterForm}) {
       .then(
         () => {
           setLoading(false)
-
           alert('Ваша форма отправлена. Наш менеджер свяжется с Вами в ближайшее время!')
           setForm({
             firstName: '',

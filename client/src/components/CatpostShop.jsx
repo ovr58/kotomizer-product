@@ -51,7 +51,7 @@ const CatpostShop = ({ }) => {
           })
           break;
         case 'select':
-          appState.shopModelData = 
+          appState.shopModelData = data[Object.keys(allFiles[indexInFiles])[0]]
           appState.assemblyMap = JSON.parse(Object.values(allFiles[indexInFiles])[0])
           break;
       

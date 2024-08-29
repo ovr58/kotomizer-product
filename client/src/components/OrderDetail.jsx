@@ -7,58 +7,83 @@ import emailjs from '@emailjs/browser'
 
 function OrderDetail() {
 
+  const snap = useSnapshot(appState)
+
+  const token = snap.userToken
+  const data = snap.shopModelData
+  const assemblyMap = snap.assemblyMap
+
   const [ img, setImg ] = useState(null)
   const [ price, setPrice ] = useState(0)
   const [ tableContent, setTableContent ] = useState({})
+  const [ form, setForm ] = useState({
+    name: '',
+    phoneNumber: ''
+  })
   const [loading, setLoading] = useState(false)
 
-  const formVerification = () => {
-    let verificationResult = true
-    if (Object.values(form).includes('')) {
-      alert('Все поля должны быть заполнены!')
-      verificationResult = false
-    }
-    if (/^\d+$/.test(form.INN)) {
-      alert('Поле ИНН должно содеражать только цифры!')
-      verificationResult = false
-    }
-    return verificationResult
+  const handleChange = (e) => {
+    setForm((prevFormData) => {
+      return {
+        ...prevFormData,
+        [e.target.name]: e.target.value
+      }
+    })
   }
 
   const handleSubmit = (e) => {
     e.preventDefault()
 
-    if (!formVerification()) {
+    if (!data && !token) {
+      alert('Выберете подходящую по когтеточку в магазине и повторите попытку...')
       return
+    }
+
+    let orderDetails = null
+
+    if (token) {
+      orderDetails = {
+        from_name: JSON.parse(token).user.user_metadata.full_name,
+        to_name: 'Nataly',
+        from_email: JSON.parse(token).user.email,
+        to_email: 'nm2413027@gmail.com',
+        message: `USER_ID: ${JSON.parse(token).user.id}, СПЕЦИФИКАЦИЯ ${JSON.stringify(assemblyMap)} ЦЕНА ${price} руб.` ,
+      }
+    } else {
+      if (!form.name) {
+        alert ('Нужно заполнить строку Имя.')
+        return
+      }
+      if (!form.phoneNumber) {
+        alert ('Нужно заполнить строку Номер телефона.')
+        return
+      }
+      orderDetails = {
+        from_name: form.name,
+        to_name: data.seller_id,
+        from_email: 'physical entity',
+        to_email: 'nm2413027@gmail.com',
+        message: `USER_PHONE: ${form.phoneNumber}, СПЕЦИФИКАЦИЯ ${JSON.stringify(assemblyMap)} ЦЕНА ${price} руб.` ,
+      }
     }
 
     setLoading(true)
 
-    emailjs
+    orderDetails && emailjs
       .send(
         import.meta.env.VITE_APP_EMAILJS_SERVICE_ID,
         import.meta.env.VITE_APP_EMAILJS_TEMPLATE_ID,
-        {
-          from_name: `${form.firstName} ${form.lastName}`,
-          to_name: 'Nataly',
-          from_email: form.email,
-          to_email: 'nm2413027@gmail.com',
-          message: `ИНН: ${form.INN}, город: ${form.city}, ${form.message}`,
-        },
+        orderDetails,
         import.meta.env.VITE_APP_EMAILJS_PUBLIC_KEY
       )
       .then(
         () => {
           setLoading(false)
 
-          alert('Ваша форма отправлена. Наш менеджер свяжется с Вами в ближайшее время!')
+          alert('Ваша заказ отправлен. Наш менеджер свяжется с Вами в ближайшее время!')
           setForm({
-            firstName: '',
-            lastName: '',
-            email: '',
-            INN: '',
-            city: '',
-            message: ''
+            name: '',
+            phoneNumber: ''
           })
         },
         (error) => {
@@ -71,23 +96,17 @@ function OrderDetail() {
       )
   }
 
-  const snap = useSnapshot(appState)
-
   useEffect(() => {
-    const priceAndSpecs = getPriceAndSpecs(snap.assemblyMap)
+    const priceAndSpecs = getPriceAndSpecs(assemblyMap)
     setPrice(priceAndSpecs.totalPrice)
     setTableContent(priceAndSpecs.tableObj)
-  }, [snap.assemblyMap])
+  }, [assemblyMap])
   console.log('RENDERED - ORDER CARD')
   useEffect(() => {
 
     (document.querySelector('.mainCanvas canvas') && img === null) && setImg(downloadFile('mainCanvas', 'getImg'))
           
   }, [])
-
-  const handleMakeAnOrder = () => {
-    return
-  }
 
   return (
     <div className="right-container">
@@ -129,13 +148,114 @@ function OrderDetail() {
                 ))}
              </tbody>
             </table>
-          </div>                
+          </div>
+        {
+          !token ? 
+          <div className="w-full p-2 mt-6">
+            <div key='phoneNumber' className='relative bg-white w-full'>
+              <input 
+                type="text" 
+                id="phoneNumber" 
+                name="phoneNumber"
+                onChange={handleChange} 
+                className="
+                  peer 
+                  bg-transparent 
+                  h-10 
+                  w-full 
+                  rounded-lg
+                  text-black 
+                  placeholder-transparent 
+                  ring-2 
+                  px-2 
+                  ring-gray-500 
+                  focus:ring-yellow-600 
+                  focus:outline-none 
+                  focus:border-rose-600" 
+                  placeholder="Ваш телефон.."
+              />
+              <label 
+                htmlFor="phoneNumber" 
+                className="
+                  absolute 
+                  cursor-text 
+                  left-0 
+                  -top-3 
+                  text-sm 
+                  text-black 
+                  bg-white   
+                  mx-1 
+                  px-1 
+                  peer-placeholder-shown:text-base 
+                  peer-placeholder-shown:text-gray-500 
+                  peer-placeholder-shown:top-2 
+                  peer-focus:-top-3 
+                  peer-focus:text-yellow-600 
+                  peer-focus:text-sm 
+                  transition-all"
+              >
+                Ваш сотовый телефон...
+              </label>
+            </div>
+            <div key='name' className='relative bg-white my-4 w-full'>
+              <input 
+                type="text" 
+                id="name" 
+                name="name" 
+                onChange={handleChange}
+                className="
+                  peer 
+                  bg-transparent 
+                  h-10 
+                  w-full 
+                  rounded-lg
+                  text-black 
+                  placeholder-transparent 
+                  ring-2 
+                  px-2 
+                  ring-gray-500 
+                  focus:ring-yellow-600 
+                  focus:outline-none 
+                  focus:border-rose-600" 
+                  placeholder="Вашe имя..."
+              />
+              <label 
+                htmlFor="name" 
+                className="
+                  absolute 
+                  cursor-text 
+                  left-0 
+                  -top-3 
+                  text-sm 
+                  text-gray-500 
+                  bg-white
+                  mx-1 
+                  px-1 
+                  peer-placeholder-shown:text-base 
+                  peer-placeholder-shown:text-gray-500 
+                  peer-placeholder-shown:top-2 
+                  peer-focus:-top-3 
+                  peer-focus:text-yellow-600 
+                  peer-focus:text-sm 
+                  transition-all"
+              >
+                Ваше имя...
+              </label>
+            </div>
+          </div> :
+          <div className='mt-3'>
+          <div>Заказ будет отправлен от Вас, </div>
+            <div>{JSON.parse(token).user.user_metadata.full_name}</div>
+          </div>
+        }                 
         <div className="flex w-full justify-center aign-center m-4 text-sm font-medium">
           <CustomButton 
             type="filled"
-            title='Заказ'
+            title={loading
+              ? 'Отправляем заказ...'
+              : 'Отправить заказ'}
             customStyles="py-2 px-4 w-full transition ease-in duration-200 text-center text-base font-semibold" 
-            handleClick={handleMakeAnOrder}
+            handleClick={handleSubmit}
           />
         </div>
         </div>
