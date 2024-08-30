@@ -404,7 +404,6 @@ useEffect(() => {
     const intersected = findIntersections()
     appState.intersected = intersected
     appState.assemblyMap = assembledObj.assemblyMap
-    appState.orderImg = downloadFile('mainCanvas', 'getImg')
   } 
   }, [assembledObj.stateString])
     

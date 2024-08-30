@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { getPriceAndSpecs } from '../config/helpers'
+import { downloadFile, getPriceAndSpecs } from '../config/helpers'
 import CustomButton from './CustomButton'
 import { useSnapshot } from 'valtio'
 import appState from '../store'
@@ -17,8 +17,8 @@ function OrderDetail() {
   const token = snap.userToken
   const data = snap.shopModelData
   const assemblyMap = snap.assemblyMap
-  const img = snap.orderImg
 
+  const [ img, setImg ] = useState(null)
   const [ price, setPrice ] = useState(0)
   const [ tableContent, setTableContent ] = useState({})
   const [ formName, setFormName ] = useState('')
@@ -92,7 +92,9 @@ function OrderDetail() {
     const priceAndSpecs = getPriceAndSpecs(assemblyMap)
     setPrice(priceAndSpecs.totalPrice)
     setTableContent(priceAndSpecs.tableObj)
-  }, [assemblyMap])
+    document.querySelector('.mainCanvas canvas') && 
+      setImg(downloadFile('mainCanvas', 'getImg'))
+  }, [JSON.stringify(assemblyMap)])
   console.log('RENDERED - ORDER CARD')
 
   return (

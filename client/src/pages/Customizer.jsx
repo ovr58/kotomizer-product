@@ -86,7 +86,9 @@ const Customizer = () => {
   const generateTabContent = () => {
     switch (activeEditorTab) {
       case "colorpicker":
-        return <CatpostShop /> // вкладка с магазином готовых когтеточек
+        return <CatpostShop
+            setOrderPage={setOrderPage}
+          /> // вкладка с магазином готовых когтеточек
       case "filepicker":
         return userToken ? 
           <FilePicker // вкладка загрузки готовых сборок
@@ -552,7 +554,7 @@ const Customizer = () => {
                 key={`${tab.name}/${i}`}
                 tab={tab}
                 isActive={activeEditorTab === tab.name}
-                handleClick = {()=>setActiveEditorTab(tab.name === activeEditorTab ? "" : tab.name)}
+                handleClick = {()=>(setActiveEditorTab(tab.name === activeEditorTab ? "" : tab.name), setOrderPage(false))}
               />
             ))}
             {generateTabContent()}
