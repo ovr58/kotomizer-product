@@ -270,7 +270,7 @@ function LoginPage({token, setRegisterForm, setRightPanelStatus}) {
           <label
             className="inline-block pl-[0.15rem] hover:cursor-pointer mr-3"
             htmlFor="exampleCheck3"
-            onTouchStart={handleCheckRememberMe}
+            onClick={handleCheckRememberMe}
           >
             Запомнить меня...
           </label>
