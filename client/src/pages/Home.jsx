@@ -37,8 +37,8 @@ const Home = () => {
                     className='w-24 h-auto object-contain'
                 />
             </motion.header>
-            <motion.div className='home-content' {...headContainerAnimation}>
-                <motion.div {...headTextAnimation}>
+            <motion.div key='home-content' className='home-content' {...headContainerAnimation}>
+                <motion.div key='headText1' {...headTextAnimation}>
                     <div className="word">
                         <span className='group-hover:animate-custom-toplong'>K</span>
                         <span className='group-hover:animate-custom-shrinkjump origin-bottom'>O</span>
@@ -47,7 +47,7 @@ const Home = () => {
                         <span className='group-hover:animate-custom-rotate'> mizer!</span>
                     </div>
                 </motion.div>
-                <motion.div {...headContentAnimation} className='flex flex-col gap-5'>
+                <motion.div key='headText2' {...headContentAnimation} className='flex flex-col gap-5'>
                     <p className='max-w-md font-normal text-gray-600 text-base'>
                     Индивидуальный подход к каждому коту! Создайте идеальный домик или когтеточку с нашим конструктором и узнайте стоимость мгновенно.. <strong>Оформите заказ в Telegram!</strong>{" "}Получите Вашу скидку и консультацию.
                     </p>

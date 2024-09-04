@@ -266,11 +266,11 @@ function LoginPage({token, setRegisterForm, setRightPanelStatus}) {
             type="checkbox"
             id="exampleCheck3"
             onChange={handleCheckRememberMe}
-            
           />
           <label
             className="inline-block pl-[0.15rem] hover:cursor-pointer mr-3"
             htmlFor="exampleCheck3"
+            onTouchStart={handleCheckRememberMe}
           >
             Запомнить меня...
           </label>
