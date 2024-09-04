@@ -242,7 +242,6 @@ function LoginPage({token, setRegisterForm, setRightPanelStatus}) {
               focus:before:opacity-[0.12] 
               focus:before:shadow-[0px_0px_0px_13px_rgba(0,0,0,0.6)] 
               focus:before:transition-[box-shadow_0.2s,transform_0.2s] 
-              focus:after:absolute focus:after:z-[1] 
               focus:after:block 
               focus:after:h-[0.875rem] 
               focus:after:w-[0.875rem] 
