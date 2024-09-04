@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { CustomButton } from '../components'
 import { supabase } from '../client'
 
@@ -14,6 +14,9 @@ function LoginPage({token, setRegisterForm, setRightPanelStatus}) {
   })
   const [rememberMe, setRememberMe] = useState(false)
 
+  useEffect(() => {
+    console.log(rememberMe)
+  }, [rememberMe])
 
   const handleChange = (e) => {
     setFormData((prevFormData) => {
@@ -24,11 +27,6 @@ function LoginPage({token, setRegisterForm, setRightPanelStatus}) {
     })
   }
 
-  const handleCheckRememberMe = (e) => {
-    console.log(e.target.checked)
-    setRememberMe(e.target.checked)
-  }
-  
   async function handleResetPassword (event) {
 
     event.preventDefault()
@@ -208,68 +206,45 @@ function LoginPage({token, setRegisterForm, setRightPanelStatus}) {
       </div>
 
       <div className="mb-6 flex items-center justify-between">
-        <div className="mb-[0.125rem] block min-h-[1.5rem] pl-[1.5rem]">
-          <input
-            className="
+        <div className="inline-flex items-center hover:cursor-pointer">
+          <input type="checkbox" value={rememberMe} onChange={() => setRememberMe(!rememberMe)} className="sr-only peer" id="exampleCheck3" />
+          <label
+            className='
               relative
-              float-left 
-              -ml-[1.5rem] 
-              mr-[6px] 
-              mt-[0.15rem] 
-              h-[1.125rem] 
-              w-[1.125rem] 
-              appearance-none 
-              rounded-[0.25rem] 
-              border-[0.125rem]
-              border-solid 
-              border-yellow-300 
-              outline-none 
-              before:pointer-events-none 
-              before:absolute 
-              before:h-[0.875rem] 
-              before:w-[0.875rem] 
-              before:scale-0 
-              before:rounded-full 
-              before:bg-transparent 
-              before:opacity-0 
-              before:shadow-[0px_0px_0px_13px_transparent] 
-              before:content-[''] 
-              checked:border-primary 
-              hover:cursor-pointer 
-              focus:shadow-none 
-              focus:transition-[border-color_0.2s] 
-              focus:before:scale-100 
-              focus:before:opacity-[0.12] 
-              focus:before:shadow-[0px_0px_0px_13px_rgba(0,0,0,0.6)] 
-              focus:before:transition-[box-shadow_0.2s,transform_0.2s] 
-              focus:after:block 
-              focus:after:h-[0.875rem] 
-              focus:after:w-[0.875rem] 
-              focus:after:rounded-[0.125rem] 
-              focus:after:content-[''] 
-              checked:focus:before:scale-100 
-              checked:focus:before:shadow-[0px_0px_0px_13px_#3b71ca] 
-              checked:focus:before:transition-[box-shadow_0.2s,transform_0.2s] 
-              checked:focus:after:-mt-px checked:focus:after:ml-[0.25rem] 
-              checked:focus:after:h-[0.8125rem] 
-              checked:focus:after:w-[0.375rem] 
-              checked:focus:after:rotate-45 
-              checked:focus:after:rounded-none 
-              checked:focus:after:border-[0.125rem] 
-              checked:focus:after:border-l-0 
-              checked:focus:after:border-t-0 
-              checked:focus:after:border-solid 
-              checked:focus:after:border-black
-              checked:focus:after:bg-transparent
-            "
-            type="checkbox"
-            id="exampleCheck3"
-            onChange={handleCheckRememberMe}
-          />
+              mr-2
+              ml-2
+              sm:w-6
+              sm:h-11
+              w-6
+              h-7
+              bg-gray-200
+              peer-focus:outline-none 
+              peer-focus:ring-4 
+              peer-focus:ring-yellow-300 
+              rounded-full peer 
+              peer-checked:after:translate-y-full 
+              peer-checked:after:border-white 
+              peer-checked:after:bg-white 
+              after:content-[""] 
+              after:absolute 
+              after:top-[2px] 
+              after:start-[2px]
+              after:bg-yellow-600
+              after:border-gray-300
+              after:border 
+              after:rounded-full
+              sm:after:h-5
+              sm:after:w-5 
+              after:h-3
+              after:w-3 
+              after:transition-all 
+              peer-checked:bg-yellow-600
+              hover:cursor-pointer'
+              htmlFor='exampleCheck3'
+          ></label>
           <label
             className="inline-block pl-[0.15rem] hover:cursor-pointer mr-3"
-            htmlFor="exampleCheck3"
-            onClick={handleCheckRememberMe}
+            htmlFor='exampleCheck3'
           >
             Запомнить меня...
           </label>
