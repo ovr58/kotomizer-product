@@ -12,7 +12,7 @@ import { v4 as uuidv4 } from 'uuid'
 import appState from '../store'
 import { getPriceAndSpecs } from '../config/helpers'
 
-const CatpostShop = ({ setOrderPage }) => {
+const CatpostShop = () => {
   console.log('CATPOSTSHOP RENDERED')
 
   const [data, setData] = useState(null)
@@ -53,7 +53,6 @@ const CatpostShop = ({ setOrderPage }) => {
         case 'select':
           appState.shopModelData = data[Object.keys(allFiles[indexInFiles])[0]]
           appState.assemblyMap = JSON.parse(Object.values(allFiles[indexInFiles])[0])
-          setOrderPage(false)
           break;
       
         default:

@@ -59,7 +59,7 @@ html {
 }
 
 .partpicker-container {
-  @apply select-none absolute left-full ml-3 glassmorphism p-3 w-[400px] h-[400px] rounded-md flex flex-col gap-4;
+  @apply select-none absolute left-full ml-3 glassmorphism p-3 sm:w-[400px] w-[250px] h-[400px] rounded-md flex flex-col gap-4;
 }
 
 .aipicker-textarea {
@@ -67,11 +67,11 @@ html {
 }
 
 .filepicker-container {
-  @apply select-none absolute left-full ml-3 glassmorphism p-3 w-[400px] h-[400px] rounded-md flex flex-col gap-4;
+  @apply select-none absolute left-full ml-3 glassmorphism p-3 sm:w-[400px] w-[250px] h-[400px] rounded-md flex flex-col gap-4;
 }
 
 .right-container {
-  @apply absolute right-0 ml-3 glassmorphism p-3 w-[400px] h-[400px] rounded-md flex flex-col gap-4 overflow-y-auto overflow-x-hidden;
+  @apply absolute right-0 ml-3 glassmorphism p-3 sm:w-[400px] w-auto h-[400px] rounded-md flex flex-col gap-4 overflow-y-auto overflow-x-hidden;
 }
 
 .filepicker-label {

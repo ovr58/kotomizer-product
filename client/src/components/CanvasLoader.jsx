@@ -1,10 +1,12 @@
 import { Html, useProgress } from "@react-three/drei";
 import CustomButton from "./CustomButton";
 
+function Loader() {
+  const { progress } = useProgress();
+  return <div className="flex justify-center items-center text-center text-black">Loading: {progress.toFixed(2)}%</div>;
+}
 
 const CanvasLoader = ({ error, resetErrorBoundary }) => {
-  console.log('CanvasLoader - ', error)
-  const { progress } = useProgress();
   return (
     <Html
       as='div'
@@ -29,14 +31,10 @@ const CanvasLoader = ({ error, resetErrorBoundary }) => {
             </span>
           </div>
         </div>
-        <p
-          className="flex justify-center items-center text-center text-black"
-        >
-          {progress.toFixed(2)}%
-        </p> 
+          <Loader />
         </>
         : 
-        <div className='group block top-1/3 p-5 w-[400px] place-items-center text-center align-center rounded-xl bg-slate-600'>
+        <div className='group block top-1/3 p-5 w-[400px]  place-items-center text-center align-center rounded-xl bg-slate-600'>
           <div className='waviy group-hover:animate-custom-falling origin-bottom '>
             {'Что-то пошло не так...'.split('').map((letter, i) => (
               <span className='text-[30px]' style={{'--i':`${i+1}`}}>{letter}</span>

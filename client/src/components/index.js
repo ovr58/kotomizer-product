@@ -30,5 +30,5 @@ export {
     LoginPage,
     CatpostShop,
     CloseButton,
-    RegistrationForm
+    RegistrationForm,
  }

@@ -22,6 +22,8 @@ const Home = () => {
 
     const [registerForm, setRegisterForm] = useState(false)
 
+    const [rightPanelStatus, setRightPanelStatus] = useState(null)
+
     useEffect(() => {
         appState.userToken = userSessionToken
     }, [userSessionToken])
@@ -58,12 +60,62 @@ const Home = () => {
                 </motion.div>
             </motion.div>
         </motion.section>
+        {
+            rightPanelStatus === 'close' && 
+            <CustomButton 
+                type={"filled"}
+                title=""
+                handleClick={() => setRightPanelStatus(null)}
+                customStyles='
+                    absolute 
+                    top-0 
+                    sm:-right-7
+                    right-0
+                    h-full 
+                    z-50
+                    hover:right-0
+                    hover:outline-none 
+                    font-medium 
+                    rounded-lg 
+                    text-sm 
+                    text-center 
+                    inline-flex 
+                    items-center
+                    animate-pulse
+                '
+                >
+                <svg className="w-5 h-5" 
+                    aria-hidden="true"
+                    xmlns="http://www.w3.org/2000/svg" 
+                    fill="none" 
+                    viewBox="0 0 14 10"
+                >
+                <path 
+                    stroke="currentColor" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth="2" 
+                    d="M13 5H1M1 5L5 1M1 5L5 9"
+                />
+                </svg>
+            </CustomButton>
+        }
         <motion.div
             key='orderDetailTab'
             className='absolute top-[60px] right-0 z-10 group'
-            {...slideAnimation('right')}
+            {...slideAnimation('right', rightPanelStatus)}
         >
-            {registerForm ? <RegistrationForm setRegisterForm={setRegisterForm} /> : <LoginPage token={userSessionToken} setRegisterForm={setRegisterForm}/>}
+                
+            {
+                registerForm ? 
+                    <RegistrationForm setRegisterForm={setRegisterForm} /> 
+                : 
+                    <LoginPage 
+                        token={userSessionToken} 
+                        setRegisterForm={setRegisterForm}
+                        setRightPanelStatus={setRightPanelStatus}
+                    />
+            }
       </motion.div>
     </AnimatePresence>
   )

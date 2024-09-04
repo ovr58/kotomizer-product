@@ -31,7 +31,7 @@ const Customizer = () => {
       break;
     default:
       TransformTabs[2].label = 'повернуть'
-      TransformTabs[2].indicator = `${placedDetail.rotation[1]*180/Math.PI}гр`
+      TransformTabs[2].indicator = `${(placedDetail.rotation[1]*180/Math.PI).toFixed(0)}гр`
       break;
   }}
   // свободных коннекторов, номера свободного коннектора для перемещения на него
@@ -85,7 +85,7 @@ const Customizer = () => {
 // функция генерации содержимого вкладок конструктора в зависимости от имени активной вкладки в состоянии
   const generateTabContent = () => {
     switch (activeEditorTab) {
-      case "colorpicker":
+      case "catpostshop":
         return <CatpostShop
             setOrderPage={setOrderPage}
           /> // вкладка с магазином готовых когтеточек
@@ -95,7 +95,7 @@ const Customizer = () => {
             file={file}
             setFile={setFile}
             handleDownLoad={handleDownLoad}
-          /> : alert('Войдите или отправьте заявку на регистрацию!')
+          /> : (alert('Войдите или отправьте заявку на регистрацию!'), setActiveEditorTab(''))
       case "partspicker":
         return userToken ?
          <PartsPicker // вкладка палитры деталей
@@ -103,7 +103,7 @@ const Customizer = () => {
             addToMap={addToMap}
             unDoAdd={unDoAdd}
             deleteLast={deleteLast}
-          /> : alert('Войдите или отправьте заявку на регистрацию!')
+          /> : (alert('Войдите или отправьте заявку на регистрацию!'), setActiveEditorTab(''))
       default:
         return null
     }
@@ -571,7 +571,7 @@ const Customizer = () => {
           key='OrderButton'
           type={orderPage ? 'filled' : 'outline'}
           title='Заказ'
-          handleClick={() => setOrderPage(!orderPage)}
+          handleClick={() => (setOrderPage(!orderPage), setActiveEditorTab(''))}
           customStyles='w-fit px-4 py-2.5 font-bold text-sm'
         />
 

@@ -1,8 +1,10 @@
-import React, { Suspense, useEffect, useRef, useState } from 'react'
+import React, { Suspense, useRef } from 'react'
 
 import { Canvas } from '@react-three/fiber'
 
 import Assembled from './Assembled'
+import { CanvasLoader } from '../components/'
+
 import { Image as  DreiImage, OrbitControls, PerspectiveCamera, Stats, TransformControls } from '@react-three/drei'
 import { AssembledProvider } from '../contexts/AssembledContext'
 import { ObjectsProvider } from '../contexts'
@@ -43,11 +45,13 @@ const CanvasModel = () => {
         position = {[dist, height, dist]} 
         fov={25}
       />
-      <ObjectsProvider>
-        <AssembledProvider snap={{assemblyMap: JSON.parse(JSON.stringify(assemblyMap))}}>
-            <Assembled />
-        </AssembledProvider>
-      </ObjectsProvider>
+      <Suspense fallback={<CanvasLoader />}>
+        <ObjectsProvider>
+          <AssembledProvider snap={{assemblyMap: JSON.parse(JSON.stringify(assemblyMap))}}>
+              <Assembled />
+          </AssembledProvider>
+        </ObjectsProvider>
+      </Suspense>
       {snap.backgroundObj.backgroundImg &&
       <>
         {transformMode != 'none' && 

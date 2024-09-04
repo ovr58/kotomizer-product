@@ -1,6 +1,6 @@
-import ai from "./ai.png";
+import shop from "./shop.png";
 import fileIcon from "./file.png";
-import swatch from "./swatch.png";
+import constructor from "./constructor.png";
 import download from "./download.png";
 
 import placeIcon from './placeIcon.png';
@@ -9,4 +9,4 @@ import rotateIcon from './rotateIcon.png'
 import whatsup from './whatsup.svg'
 import telegram from './telegram.svg'
 
-export { ai, fileIcon, swatch, download, placeIcon, positionIcon, rotateIcon, whatsup, telegram };
+export { shop, fileIcon, constructor, download, placeIcon, positionIcon, rotateIcon, whatsup, telegram };

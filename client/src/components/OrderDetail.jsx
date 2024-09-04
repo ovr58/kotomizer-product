@@ -99,10 +99,10 @@ function OrderDetail() {
 
   return (
     <div className="right-container">
-      <div className="flex flex-col w-full justify-between items-center">
+      <div className="flex flex-col sm:h-auto h-[200px] w-full justify-between items-center">
         {
           img && <img src={img} alt="shopping image"
-            className="h-auto rounded-t-lg" />
+            className="block sm:h-auto h-[200px] rounded-t-lg" />
         }
         <div className="text-xl text-center font-semibold text-red-500">{`Стоимость - ${price} руб.`}</div>
       </div>

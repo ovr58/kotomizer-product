@@ -1,9 +1,9 @@
-import { swatch, fileIcon, ai, positionIcon, placeIcon, rotateIcon } from "../assets";
+import { shop, fileIcon, constructor, positionIcon, placeIcon, rotateIcon } from "../assets";
 
 export const EditorTabs = [
   {
-    name: "colorpicker",
-    icon: swatch,
+    name: "catpostshop",
+    icon: shop,
     label: 'магазин готовых когтеточек'
   },
   {
@@ -13,7 +13,7 @@ export const EditorTabs = [
   },
   {
     name: "partspicker",
-    icon: ai,
+    icon: constructor,
     label: 'каталог деталей'
   },
 ];

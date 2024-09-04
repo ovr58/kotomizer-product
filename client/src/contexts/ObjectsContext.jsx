@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useMemo } from 'react'
+import React, { createContext, useCallback, useContext, useEffect, useMemo } from 'react'
 import { useGLTF, useTexture } from '@react-three/drei'
 import { getAllMaterials } from '../config/helpers'
 import { Parts } from '../config/constants'
@@ -46,6 +46,7 @@ export const ObjectsProvider = ({ children }) => {
   }, [textureLists, objects])
 
   const materials = generateMaterials()
+
   return (
     <ObjectsContext.Provider value={{objects, materials}}>
         {children}

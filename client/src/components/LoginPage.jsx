@@ -6,7 +6,7 @@ import Cookies from 'js-cookie'
 import appState from '../store'
 
 
-function LoginPage({token, setRegisterForm}) {
+function LoginPage({token, setRegisterForm, setRightPanelStatus}) {
 
   const [formData, setFormData] = useState({
     userEmail: '',
@@ -73,6 +73,43 @@ function LoginPage({token, setRegisterForm}) {
  
   return (
     <div className="right-container">
+      <div className='w-[20px] h-full cursor-pointer'>
+        <CustomButton 
+          type={"filled"}
+          title=""
+          handleClick={() => setRightPanelStatus('close')}
+          customStyles='
+            absolute 
+            top-0 
+            -left-7
+            h-full 
+            hover:left-0
+            hover:outline-none 
+            font-medium 
+            rounded-lg 
+            text-sm 
+            text-center 
+            inline-flex 
+            items-center
+            animate-pulse
+          '
+        >
+          <svg className="w-5 h-5" 
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg" 
+            fill="none" 
+            viewBox="0 0 14 10"
+          >
+            <path 
+              stroke="currentColor" 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth="2" 
+              d="M1 5H13M13 5L9 1M13 5L9 9"
+            />
+          </svg>
+        </CustomButton>
+      </div>
       <div className="flex-none w-full mt-2 text-sm font-medium text-black">
         {!token ? 'Войдите в Ваш аккаунт': 'Рады видеть Вас снова!'}
       </div>
@@ -232,7 +269,7 @@ function LoginPage({token, setRegisterForm}) {
             
           />
           <label
-            className="inline-block pl-[0.15rem] hover:cursor-pointer"
+            className="inline-block pl-[0.15rem] hover:cursor-pointer mr-3"
             htmlFor="exampleCheck3"
           >
             Запомнить меня...
