@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { CustomButton } from '../components'
 import { supabase } from '../client'
 
@@ -13,10 +13,6 @@ function LoginPage({token, setRegisterForm, setRightPanelStatus}) {
     userPassword: ''
   })
   const [rememberMe, setRememberMe] = useState(false)
-
-  useEffect(() => {
-    console.log(rememberMe)
-  }, [rememberMe])
 
   const handleChange = (e) => {
     setFormData((prevFormData) => {
@@ -49,7 +45,6 @@ function LoginPage({token, setRegisterForm, setRightPanelStatus}) {
   async function handleSubmit (e) {
     e.preventDefault()
     try {
-      console.log(formData)
       const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.userEmail,
         password: formData.userPassword,
@@ -246,7 +241,7 @@ function LoginPage({token, setRegisterForm, setRightPanelStatus}) {
             className="inline-block pl-[0.15rem] hover:cursor-pointer mr-3"
             htmlFor='exampleCheck3'
           >
-            Запомнить меня...
+            {rememberMe ? 'Запомнить меня...' : 'Чужое устройство...'}
           </label>
         </div>
 

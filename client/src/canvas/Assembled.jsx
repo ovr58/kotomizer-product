@@ -39,7 +39,6 @@ const Assembled = () => {
   const [objectToChange, setObjectToChange] = useState({name: null, position: [0,0,0], textureCurrent: null})
   const [helpersBoxes, setHelpersBoxes] = useState([])
 
-  console.log('rerender Assembled MAIN - ', assembledObj, details)
   
 const findIntersections = () => {
     // поиск наложений (постоянного оверлапа) объектов в сцене
@@ -220,7 +219,6 @@ const placeJumperOnPosition = (pointsArray) => {
           ).filter(
             (obj) => !obj.object.name.includes('-')
           )
-      console.log('INTERSECTS - ', intersects)
 // если ничего не осталось ничего в массиве продолжим
     if (intersects.length === 0) {
 // определяем вектора направлений по координатным осям
@@ -398,7 +396,6 @@ useEffect(() => {
 
   const sceneDetails = groupAssembled.current
   if (sceneDetails) {
-    console.log('SET INTERSECTIONS')
     appState.distanceToCamera = getDistance(sceneDetails)
     appState.freeCons = assembledObj.freeCons
     const intersected = findIntersections()

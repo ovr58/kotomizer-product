@@ -4,7 +4,6 @@ import { AccumulativeShadows, RandomizedLight } from '@react-three/drei'
 // задний план для модели - плоскость, тени, свет
 const Backdrop = ({ height }) => {
 
-  console.log('rendered - Backdrop')
   return (
     <AccumulativeShadows
       temporal

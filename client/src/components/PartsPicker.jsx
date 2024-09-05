@@ -23,7 +23,6 @@ function PartsPicker({
   const [ clicked, setClicked ] = useState('')
 
   const objects = useMemo(() => Object.keys(Parts).map((name) => useGLTF(`/${name}.glb`)), [])
-  console.log('CLICKED - ', clicked)
   if (freeCons[0] && snap.assemblyMap.length == 0) {
     Object.keys(Parts).forEach(
       (name) => Parts[name].type != 'base' ? Parts[name].available = true : Parts[name].available = false)
@@ -53,7 +52,6 @@ function PartsPicker({
         if (!partsAvailable.every((part) => part === 'unavailable')) {
           do {
             index = indexOfNeeded(index)
-            console.log('INDEX -', index, indexOfClicked)
             if (partsAvailable[index] != 'unavailable') {
               setClicked(partsAvailable[index].filename.split('.')[0].replace('/', ''))
               return 'CHANGED RIGHT'
@@ -63,7 +61,6 @@ function PartsPicker({
         return 'CHANGED RIGHT'
       } else if (arrow == 'left') {
         const indexOfNeeded = (indexOfClicked) => {
-          console.log(partsAvailable)
           return indexOfClicked > 0 ? (indexOfClicked - 1) : (partsAvailable.length - 1) 
         }
         let index = indexOfClicked
@@ -71,7 +68,6 @@ function PartsPicker({
         if (!partsAvailable.every((part) => part === 'unavailable')) {
           do {
             index = indexOfNeeded(index)
-              console.log('INDEX -', index)
               if (partsAvailable[index] != 'unavailable') {
                 setClicked(partsAvailable[index].filename.split('.')[0].replace('/', ''))
                 return
@@ -85,7 +81,6 @@ function PartsPicker({
 
   useEffect(() => {
     clicked === '' && getClickedIndexChanged('right')
-    console.log('EFFECT')
   }, [])
 
 

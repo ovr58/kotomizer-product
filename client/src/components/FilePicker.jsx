@@ -8,7 +8,6 @@ import appState from '../store'
 
 const FilePicker = ({ file, setFile, handleDownLoad }) => {
   appState.camRotation = false
-  console.log('FILEPICKER RENDERED')
   return (
     <div
       className='filepicker-container'

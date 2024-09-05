@@ -62,16 +62,12 @@ export const useBoundingBox = (obj) => {
     
     return () => {
         if (allBoxes.length>0 && checkedBox) {
-            console.log('calculated')
             let result = []
-            console.log('checkedBox: ', checkedBox, 'allBoxes: ' , allBoxes)
             for (let box of allBoxes) {
-                // console.log(checkedBox.intersectsOBB(box), 'box: ', box, 'checked: ', checkedBox )
                 result.push(
                     checkedBox.intersectsOBB(box)
                 )
             }
-            console.log(result.filter(value => value == true), 'result')
             return result.filter(value => value == true)
         } else {
             return []

@@ -13,7 +13,6 @@ function Fallback({ error, resetErrorBoundary }) {
 }
 
 const PreviewAssembled = ({ setDist }) => {
-  console.log('RENDERED preview assembled')
   const previewAssembled = useRef()
   const detailsPreview = useRef([])
 
@@ -70,19 +69,15 @@ const FilePreview = ({file, setFile}) => {
   })
 
   useEffect(() => {
-    console.log('USE EFFECT - ', file.name, fileData.image, fileData.map)
     readFile(file)
   }, [file.name])
   
-  console.log('FILE NAME - ', fileData)
   function readFile(file) {
     try {
       reader(file).then((result) => {
         if (file.type.includes('image')) {
-          console.log('FILE READ AS IMAGE')
           const img = new Image()
           img.src = result
-          console.log(img.width)
           setFileData({
             image: result,
             imageScale: [img.width/Math.min(img.width, img.height), img.height/Math.min(img.width, img.height)],
@@ -90,7 +85,6 @@ const FilePreview = ({file, setFile}) => {
           })
           setDist({dist: 1, height: img.height/2})
         } else {
-          console.log('FILE READ AS JSON')
           setFileData({
             image: null,
             imageScale: [0, 0],

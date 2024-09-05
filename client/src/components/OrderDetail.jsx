@@ -95,7 +95,6 @@ function OrderDetail() {
     document.querySelector('.mainCanvas canvas') && 
       setImg(downloadFile('mainCanvas', 'getImg'))
   }, [JSON.stringify(assemblyMap)])
-  console.log('RENDERED - ORDER CARD')
 
   return (
     <div className="right-container">

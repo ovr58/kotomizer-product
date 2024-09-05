@@ -364,7 +364,6 @@ const Customizer = () => {
         deleteLastButton: false
       })
       setClicked(Object.keys(Parts).find((key) => Parts[key].type === 'base'))
-      console.log(getClickedIndexChanged('right'))
     }
 
   }
@@ -372,12 +371,10 @@ const Customizer = () => {
   const setNewPosition = () => {
 
     if (hasBackground && hasNimbedPart == false) {
-      console.log('MODE CHANGED', hasNimbedPart, hasBackground)
       const modes = ['none', 'translate', 'scale', 'rotate']
       const currModeIndex = modes.indexOf(hasBackgroundMode)
       const nextModeIndex = currModeIndex + 1 > modes.length - 1 ? 0 : currModeIndex + 1
       appState.backgroundObj.mode = modes[nextModeIndex]
-      console.log('MODE - ', modes[nextModeIndex])
     }
   
 // функция установки детали с которой работаем на сборку в новой позиции (при нажатии кнопки перемещения на вкладке трансформации)
@@ -435,7 +432,6 @@ const Customizer = () => {
     }
     // если работаем с другой деталью не с джампером
     if (hasNimbedPart && freeConsToPlace[0]) {
-      console.log(freeConsToPlace)
       // если номер свободного коннектора больше последнего из всех свободных коннекторов то назначим первый из свободных
       const idArr = freeConsToPlace.map((freeCon) => `${freeCon.id}${freeCon.conName}`)
       const currPosition = `${placedDetail.connectedTo[0].id}${placedDetail.connectedTo[0].connector.name}`
@@ -445,7 +441,6 @@ const Customizer = () => {
         id: freeConsToPlace[nextIndex].id,
         connector: {name: freeConsToPlace[nextIndex].conName}
       }]
-      console.log(freeConsToPlace[nextIndex])
       // если этот коннектор последний то назначим номер нулем иначе следующим номером свободного коннектора
       // countIndex + 1 > freeConsToPlace.length - 1 ? setConNumber(0) : setConNumber(conNumber + 1) 
     } else if (hasNimbedPart) {
@@ -457,7 +452,6 @@ const Customizer = () => {
   const placeDetail = () => {
     if (hasNimbedPart) {
       const trueIntersections = intersectedState.filter((state) => state[2])
-      console.log('TRUE INTERSECTIONS -', trueIntersections)
       if (trueIntersections.length<2 && placedDetail.type !== 'jumper') {
         appState.assemblyMap[assemblyMap.length-1].id = -placedDetail.id
         setHasNimbedPart(false)
@@ -471,7 +465,6 @@ const Customizer = () => {
         appState.assemblyMap[assemblyMap.length-1].id = -placedDetail.id
         setHasNimbedPart(false)
       } else if (placedDetail.type == 'jumper' && placedDetail.position.toString().replace(/\D/g, '') !== '000') {
-        console.log('PLACED DETAI POSITION ', placedDetail.position.toString().replace(/\D/g, ''))
 
         if (trueIntersections.length == 2)
           {

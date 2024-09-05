@@ -4,7 +4,6 @@ import { useState } from "react";
 const CloseButton = ({ closeButtonRef, position, setOpenState, scale = [0,0,0], buttonKey = 'fromMaterialChanger' }) => {
 
   const [hoveredCloseButton, setCloseButtonHover] = useState(1)
-  console.log('CLOSE BUTTON - ', position)
   return (
     <group
       name={'CloseButton'}

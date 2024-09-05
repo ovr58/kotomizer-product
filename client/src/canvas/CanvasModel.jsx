@@ -28,7 +28,6 @@ const CanvasModel = () => {
   const transformMode = snap.backgroundObj.mode
   const dist = snap.distanceToCamera.dist
   const height = snap.distanceToCamera.height
-  console.log('rendered CanvasComponent - ')
   return (
     <Canvas
       className='mainCanvas'

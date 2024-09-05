@@ -13,7 +13,6 @@ import appState from '../store'
 import { getPriceAndSpecs } from '../config/helpers'
 
 const CatpostShop = () => {
-  console.log('CATPOSTSHOP RENDERED')
 
   const [data, setData] = useState(null)
   const [city, setCity] = useState(null)
@@ -73,7 +72,6 @@ const CatpostShop = () => {
       }
       const allFiles = city ? 
         Object.keys(data).filter((key) => data[key].seller_city === city).map((key) => {return {[key]: data[key].seller_stock}}) : []
-      console.log('ALL FILES - ', allFiles)
       setAllFiles(allFiles)
       setFile(allFiles.length>0 ? getFile(Object.values(allFiles[0])[0]) : null)
       setPrice(getPriceAndSpecs(JSON.parse(Object.values(allFiles[0])[0])).totalPrice)

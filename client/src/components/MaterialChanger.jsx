@@ -221,7 +221,6 @@ const Model = ({ name, positionCorrection, size, textureName, textureDefault, se
 const MaterialChanger = ({ position, name, textureCurrent, textureDefault, size, setObjectState }) => {
 
   
-  console.log('MATERIALCHANGER')
   return (
     <Selection 
       key={uuidv4()}

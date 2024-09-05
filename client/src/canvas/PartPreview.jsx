@@ -19,7 +19,6 @@ const Model = ({clicked, object}) => {
   nodes = new Group().add(...objectNodes)
   dist = getDistance(nodes)
   
-  console.log(clicked, 'DIST, NODES - ', nodes, dist)
   const objectToMove = useRef()
   
   useFrame(() => {
@@ -28,7 +27,6 @@ const Model = ({clicked, object}) => {
 
   useEffect(() => {
     if(objectToMove.current) {
-      console.log(objectToMove.current)
       new TWEEN.Tween(objectToMove.current.position).to(
         {
           x: 0,

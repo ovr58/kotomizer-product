@@ -11,8 +11,6 @@ export const useAssembled = () => useContext(AssembledContext);
 
 export const AssembledProvider = ({ snap, children }) => {
 
-  console.log('ASSEMBLED PROVIDER')
-
   const stateString = JSON.stringify(snap.assemblyMap)
   const {objects, materials} = useObjects()
 
@@ -67,7 +65,6 @@ export const AssembledProvider = ({ snap, children }) => {
               if (instruction.type) {
                 const u = instruction.scale ? instruction.scale[1] : 1
                 const v = instruction.scale ? instruction.scale[0] : 1
-                console.log('UV', u, v)
                 if (detailMaterial.map) {
                   detailMaterial.map = detailMaterial.map.clone()
                   detailMaterial.map.repeat.set(u, v)
