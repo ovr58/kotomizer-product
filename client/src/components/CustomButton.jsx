@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types'
 import { useSnapshot } from 'valtio'
+import { v4 as uuidv4 } from 'uuid'
 
 import appState from '../store'
 
@@ -30,6 +31,7 @@ const CustomButton = ({ type, title, customStyles, handleClick, children }) => {
     }
   return (
     <button
+        key={uuidv4()}
         className={`px-2 py-1.5 flex-1 rounded-md ${customStyles} ${type == 'bloked' ? 'pointer-events-none' : ''}`}
         style={generateStyle(type)}
         onClick={handleClick}

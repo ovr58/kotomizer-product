@@ -76,7 +76,8 @@ function LoginPage({token, setRegisterForm, setRightPanelStatus}) {
             top-0 
             -left-7
             h-full 
-            hover:left-0
+            hover:translate-x-7
+            transition-all
             hover:outline-none 
             font-medium 
             rounded-lg 

@@ -81,7 +81,7 @@ const CanvasModel = () => {
         target={[0,height,0]} 
       />
       
-      <Stats />
+      {/* <Stats /> */}
     </Canvas>
   )
 }

@@ -73,7 +73,8 @@ const Home = () => {
                     right-0
                     h-full 
                     z-50
-                    hover:right-0
+                    sm:hover:-translate-x-7
+                    sm:transition-all
                     hover:outline-none 
                     font-medium 
                     rounded-lg 
