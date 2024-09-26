@@ -40,29 +40,42 @@ const Home = () => {
             <motion.div key='home-content' className='home-content' {...headContainerAnimation}>
                 <motion.div key='headText1' {...headTextAnimation}>
                     <div className="word">
-                        <span className='group-hover:animate-custom-toplong'>K</span>
-                        <span className='group-hover:animate-custom-shrinkjump origin-bottom'>O</span>
-                        <span className='group-hover:animate-custom-falling origin-bottom'>T</span>
-                        <span className='group-hover:animate-custom-balance origin-bottom-left'>O</span>
-                        <span className='group-hover:animate-custom-rotate'> mizer!</span>
+                        <span key={'span1'} className='group-hover:animate-custom-toplong'>K</span>
+                        <span key={'span2'} className='group-hover:animate-custom-shrinkjump origin-bottom'>O</span>
+                        <span key={'span3'} className='group-hover:animate-custom-falling origin-bottom'>T</span>
+                        <span key={'span4'} className='group-hover:animate-custom-balance origin-bottom-left'>O</span>
+                        <span key={'span5'} className='group-hover:animate-custom-rotate'> mizer!</span>
                     </div>
                 </motion.div>
-                <motion.div key='headText2' {...headContentAnimation} className='flex flex-col gap-5'>
-                    <p className='max-w-md font-normal text-gray-600 text-base'>
+                <motion.div key='headText2' {...headContentAnimation} className='flex flex-col gap-4'>
+                    <p className='max-w-md sm:text-base text-xs font-normal text-gray-600'>
                     Индивидуальный подход к каждому коту! Создайте идеальный домик или когтеточку с нашим конструктором и узнайте стоимость мгновенно.. <strong>Оформите заказ в Telegram!</strong>{" "}Получите Вашу скидку и консультацию.
                     </p>
                     <CustomButton 
+                        key='customButton2'
                         type='filled'
                         title='Начать...'
                         handleClick={() => appState.intro = false}
                         customStyles='w-fit px-4 py-2.5 font-bold text-sm'
                     />
                 </motion.div>
+                <a 
+                    className = 'neo-brutalism-blue text-white p-1 px-3'
+                    href='https://github.com/ovr58'
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    key='linkToMe'
+                >
+                    <p>
+                        Made By Me (see you on GitHub)
+                    </p>
+                </a>
             </motion.div>
         </motion.section>
         {
             rightPanelStatus === 'close' && 
             <CustomButton 
+                key='customButton1'
                 type={"filled"}
                 title=""
                 handleClick={() => setRightPanelStatus(null)}

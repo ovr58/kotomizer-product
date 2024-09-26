@@ -31,7 +31,7 @@ html {
 }
 
 .home {
-  @apply w-fit xl:h-full flex xl:justify-between justify-start items-start flex-col xl:py-8 xl:px-36 sm:p-8 p-6 max-xl:gap-7 absolute z-10;
+  @apply w-fit xl:h-full h-screen flex xl:justify-between justify-start items-start flex-col xl:py-8 xl:px-36 sm:p-8 p-4 max-xl:gap-7 absolute z-10;
 }
 
 .home-content {
@@ -115,6 +115,14 @@ input[type="file"] {
   transform: translateZ(0);
 }
 
+.neo-brutalism-blue {
+  background: #2b77e7;
+  position: relative;
+  border-radius: 10px;
+  border: #2b77e7;
+  box-shadow: 0.6vmin 0.6vmin #336cc1, 1vmin 1vmin #0092db, 1vmin 1vmin #0092db,
+    0.65vmin 1vmin #0092db, 1vmin 0.65vmin #0092db;
+}
 
 .word {
   font-family: "Anton", sans-serif;
