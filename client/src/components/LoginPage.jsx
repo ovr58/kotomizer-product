@@ -201,7 +201,7 @@ function LoginPage({token, setRegisterForm, setRightPanelStatus}) {
         </div>
       </div>
 
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex items-center justify-between" onClick={() => setRememberMe(!rememberMe)}>
         <div className="inline-flex items-center hover:cursor-pointer">
           <input type="checkbox" value={rememberMe} onChange={() => setRememberMe(!rememberMe)} className="sr-only peer" id="exampleCheck3" />
           <label
