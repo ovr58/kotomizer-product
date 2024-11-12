@@ -67,6 +67,7 @@ const Home = () => {
                     key='linkToMe'
                 >
                     <p>
+                        FOR DEMO ACCESS ENTER USER: ADMIN@ADMIN.COM PASSWORD: ADMIN
                         Made By Me (see you on GitHub)
                     </p>
                 </a>
